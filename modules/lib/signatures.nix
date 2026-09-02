@@ -2,44 +2,40 @@
   allowedHosts = ["serpentine"];
   allowedUsers = ["alice"];
 
-  mkMessage = hostName: userName:
-    "lumina: signature verification failed for host '${hostName}'"
-    + lib.optionalString (userName != null) " and user '${userName}'"
-    + ". This module is proprietary to Alice and refuses to evaluate on unauthorized hosts or users.";
-
-  mkAssertion = hostName: userName: {
-    assertion = builtins.elem hostName allowedHosts && (userName == null || builtins.elem userName allowedUsers);
-    message = mkMessage hostName userName;
+  mkHostAssertion = hostName: {
+    assertion = builtins.elem hostName allowedHosts;
+    message = "lumina/signature: host '${hostName}' is not authorized. Allowed: ${builtins.concatStringsSep ", " allowedHosts}.";
   };
 
-  protectNixos = mod: args @ {config, ...}: let
-    hostName = config.networking.hostName or "unknown";
-    result = mod args;
-  in
-    result
-    // {
-      assertions = (result.assertions or []) ++ [(mkAssertion hostName null)];
-    };
+  mkUserAssertion = hostName: userName: {
+    assertion =
+      builtins.elem hostName allowedHosts
+      && builtins.elem userName allowedUsers;
+    message =
+      "lumina/signature: host '${hostName}' / user '${userName}' is not authorized."
+      + " Allowed hosts: ${builtins.concatStringsSep ", " allowedHosts}."
+      + " Allowed users: ${builtins.concatStringsSep ", " allowedUsers}.";
+  };
+in {
+  # Library
+  flake.lib.signatures = {
+    inherit allowedHosts allowedUsers mkHostAssertion mkUserAssertion;
+  };
 
-  protectHome = mod: args @ {
+  # NixOS module, import into a host configuration to gate it
+  flake.nixosModules.signature = {config, ...}: {
+    assertions = [(mkHostAssertion (config.networking.hostName or "unknown"))];
+  };
+
+  # Home Manager module, import into a user's HM imports to gate it
+  flake.homeModules.signature = {
     config,
     osConfig ? {},
     ...
   }: let
     hostName = osConfig.networking.hostName or "unknown";
     userName = config.home.username or "unknown";
-    result = mod args;
-  in
-    result
-    // {
-      assertions = (result.assertions or []) ++ [(mkAssertion hostName userName)];
-    };
-in {
-  flake.lib.signatures = {
-    hosts = allowedHosts;
-    users = allowedUsers;
-    assertHost = hostName: mkAssertion hostName null;
-    assertHostUser = hostName: userName: mkAssertion hostName userName;
-    inherit protectNixos protectHome;
+  in {
+    assertions = [(mkUserAssertion hostName userName)];
   };
 }
