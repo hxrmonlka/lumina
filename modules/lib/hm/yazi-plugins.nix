@@ -15,35 +15,30 @@
 
     config = lib.mkIf (cfg.plugins != []) {
       home.activation.luminaYaziPlugins = config.lib.dag.entryAfter ["writeBoundary"] ''
-        YAZI_STATE_DIR="''${XDG_STATE_HOME:-$HOME/.local/state}/lumina"
-        YAZI_PLUGINS_FILE="$YAZI_STATE_DIR/yazi-plugins.txt"
+        PKG_TOML="''${XDG_CONFIG_HOME:-$HOME/.config}/yazi/package.toml"
 
-        mkdir -p "$YAZI_STATE_DIR"
-
-        OLD_PLUGINS=""
-        if [ -f "$YAZI_PLUGINS_FILE" ]; then
-          OLD_PLUGINS=$(cat "$YAZI_PLUGINS_FILE")
+        INSTALLED=""
+        if [ -f "$PKG_TOML" ]; then
+          INSTALLED=$(${pkgs.gnused}/bin/sed -n 's/^use = "\(.*\)"/\1/p' "$PKG_TOML")
         fi
 
-        NEW_PLUGINS="${lib.concatStringsSep " " cfg.plugins}"
+        DESIRED="${lib.concatStringsSep " " cfg.plugins}"
 
-        # Delete removed plugins
-        for plugin in $OLD_PLUGINS; do
-          if ! echo " $NEW_PLUGINS " | grep -q " $plugin "; then
+        # Delete plugins no longer desired
+        for plugin in $INSTALLED; do
+          if ! echo " $DESIRED " | grep -q " $plugin "; then
             echo "lumina-yazi-plugins: removing $plugin"
-            ya pkg delete "$plugin" || true
+            ya pkg delete "$plugin" || echo "lumina-yazi-plugins: failed to remove $plugin, will retry next activation" >&2
           fi
         done
 
-        # Add new plugins
-        for plugin in $NEW_PLUGINS; do
-          if ! echo " $OLD_PLUGINS " | grep -q " $plugin "; then
+        # Add plugins not yet installed
+        for plugin in $DESIRED; do
+          if ! echo " $INSTALLED " | grep -q " $plugin "; then
             echo "lumina-yazi-plugins: adding $plugin"
-            ya pkg add "$plugin" || true
+            ya pkg add "$plugin" || echo "lumina-yazi-plugins: failed to add $plugin, will retry next activation" >&2
           fi
         done
-
-        echo "$NEW_PLUGINS" > "$YAZI_PLUGINS_FILE"
       '';
     };
   };
