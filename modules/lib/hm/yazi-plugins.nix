@@ -7,71 +7,99 @@
   }: let
     cfg = config.lumina.yazi;
 
-    mkPlugin = identifier: spec: let
+    parsePlugin = identifier: let
       parts = lib.splitString ":" identifier;
 
-      repo = builtins.head parts;
-
-      pluginName =
-        if builtins.length parts > 1
-        then builtins.elemAt parts 1
-        else lib.last (lib.splitString "/" repo);
-
-      repoParts = lib.splitString "/" repo;
+      repository = builtins.head parts;
+      repositoryParts = lib.splitString "/" repository;
 
       owner =
-        if builtins.length repoParts == 2
-        then builtins.elemAt repoParts 0
+        if builtins.length repositoryParts == 2
+        then builtins.elemAt repositoryParts 0
         else
           throw ''
-            lumina.yazi.plugins: invalid repository "${repo}".
-            Expected "owner/repo" or "owner/repo:plugin".
+            lumina.yazi.plugins: invalid repository "${repository}".
+
+            Expected:
+              "owner/repo"
+            or:
+              "owner/repo:plugin"
           '';
 
-      repoName = builtins.elemAt repoParts 1;
+      repo = builtins.elemAt repositoryParts 1;
+
+      requestedName =
+        if builtins.length parts == 2
+        then builtins.elemAt parts 1
+        else null;
+
+      pluginName =
+        if requestedName != null
+        then requestedName
+        else if lib.hasSuffix ".yazi" repo
+        then lib.removeSuffix ".yazi" repo
+        else repo;
+    in {
+      inherit owner repo pluginName requestedName;
+    };
+
+    mkPlugin = identifier: spec: let
+      parsed = parsePlugin identifier;
 
       src = pkgs.fetchFromGitHub {
-        inherit owner;
-        repo = repoName;
+        inherit (parsed) owner repo;
         rev = spec.rev;
         hash = spec.hash;
       };
 
-      pluginSource =
-        if builtins.length parts > 1
-        then "${src}/${pluginName}.yazi"
+      source =
+        if parsed.requestedName != null
+        then "${src}/${parsed.pluginName}.yazi"
         else src;
-
-      targetName = "${pluginName}.yazi";
     in {
-      name = "yazi/plugins/${targetName}";
-      value.source = pluginSource;
+      name = parsed.pluginName;
+      value = source;
     };
   in {
     options.lumina.yazi.plugins = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.submodule {
-        options = {
-          rev = lib.mkOption {
-            type = lib.types.str;
-            description = "Pinned Git revision of the plugin.";
-          };
+      type = lib.types.attrsOf (
+        lib.types.submodule {
+          options = {
+            rev = lib.mkOption {
+              type = lib.types.str;
+              description = ''
+                Git revision to pin the Yazi plugin to.
+              '';
+            };
 
-          hash = lib.mkOption {
-            type = lib.types.str;
-            description = "Nix hash of the fetched GitHub source.";
+            hash = lib.mkOption {
+              type = lib.types.str;
+              description = ''
+                Nix fixed-output hash for the fetched plugin source.
+              '';
+            };
           };
-        };
-      });
+        }
+      );
 
       default = {};
 
       example = lib.literalExpression ''
         {
-          "yazi-rs/plugins:git" = {
-            rev = "9a1129c";
+          "dedukun/bookmarks.yazi" = {
+            rev = "9ef1254d8afe88aba21cd56a186f4485dd532ab8";
+            hash = "sha256-...";
+          };
+
+          "yazi-rs/plugins:chmod" = {
+            rev = "58c4f4e2f4835cc9bf6751f39e3f7c574fc7f55a";
             hash = "sha256-...";
           };
         }
+      '';
+
+      description = ''
+        Declaratively managed Yazi plugins.
       '';
     };
 
@@ -83,9 +111,14 @@
         }
       ];
 
-      home.file = lib.listToAttrs (
-        lib.mapAttrsToList mkPlugin cfg.plugins
-      );
+      programs.yazi.plugins =
+        lib.mapAttrs' (
+          identifier: spec: let
+            plugin = mkPlugin identifier spec;
+          in
+            lib.nameValuePair plugin.name plugin.value
+        )
+        cfg.plugins;
     };
   };
 }
