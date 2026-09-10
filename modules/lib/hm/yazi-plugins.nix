@@ -1,5 +1,5 @@
 {...}: {
-  flake.homeModules.lumina-yazi-plugins = {
+  flake.homeModules.yazi-plugins = {
     config,
     lib,
     pkgs,
