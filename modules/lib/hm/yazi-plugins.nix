@@ -1,128 +1,88 @@
-{...}: {
-  flake.homeModules.yazi-plugins = {
-    config,
-    lib,
-    pkgs,
-    ...
-  }: let
-    cfg = config.lumina.yazi;
-    desiredPlugins = lib.unique cfg.plugins;
-    yaziPackage =
-      if config.programs.yazi.package != null
-      then config.programs.yazi.finalPackage
-      else pkgs.yazi;
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.lumina.yazi;
+
+  mkPlugin = identifier: spec: let
+    parts = lib.splitString ":" identifier;
+
+    repo = builtins.head parts;
+    pluginName =
+      if builtins.length parts > 1
+      then builtins.elemAt parts 1
+      else lib.last (lib.splitString "/" repo);
+
+    repoParts = lib.splitString "/" repo;
+
+    owner =
+      if builtins.length repoParts == 2
+      then builtins.elemAt repoParts 0
+      else
+        throw ''
+          lumina.yazi.plugins: invalid repository "${repo}".
+          Expected "owner/repo" or "owner/repo:plugin".
+        '';
+
+    repoName = builtins.elemAt repoParts 1;
+
+    src = pkgs.fetchFromGitHub {
+      inherit owner repoName;
+      repo = repoName;
+      rev = spec.rev;
+      hash = spec.hash;
+    };
+
+    pluginSource =
+      if builtins.length parts > 1
+      then "${src}/${pluginName}.yazi"
+      else src;
+
+    targetName = "${pluginName}.yazi";
   in {
-    options.lumina.yazi.plugins = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [];
-      description = "Authoritative list of Yazi plugins to reconcile with ya pkg.";
-    };
+    name = "yazi/plugins/${targetName}";
+    value.source = pluginSource;
+  };
+in {
+  options.lumina.yazi.plugins = lib.mkOption {
+    type = lib.types.attrsOf (lib.types.submodule {
+      options = {
+        rev = lib.mkOption {
+          type = lib.types.str;
+          description = "Pinned Git revision of the plugin.";
+        };
 
-    config = lib.mkIf (cfg.plugins != []) {
-      assertions = [
-        {
-          assertion = config.programs.yazi.enable && config.programs.yazi.package != null;
-          message = "lumina.yazi.plugins requires programs.yazi.enable and a non-null programs.yazi.package.";
-        }
-      ];
+        hash = lib.mkOption {
+          type = lib.types.str;
+          description = "Nix hash of the fetched GitHub source.";
+        };
+      };
+    });
 
-      home.activation.luminaYaziPlugins = config.lib.dag.entryAfter ["installPackages"] ''
-        export PATH="${lib.makeBinPath [pkgs.git]}:$PATH"
+    default = {};
 
-        YA=${lib.escapeShellArg "${yaziPackage}/bin/ya"}
-        if [[ -n "''${YAZI_CONFIG_HOME:-}" && "$YAZI_CONFIG_HOME" = /* ]]; then
-          YAZI_CONFIG_DIR="$YAZI_CONFIG_HOME"
-        elif [[ -n "''${XDG_CONFIG_HOME:-}" && "$XDG_CONFIG_HOME" = /* ]]; then
-          YAZI_CONFIG_DIR="$XDG_CONFIG_HOME/yazi"
-        else
-          YAZI_CONFIG_DIR="$HOME/.config/yazi"
-        fi
-        PKG_TOML="$YAZI_CONFIG_DIR/package.toml"
+    example = lib.literalExpression ''
+      {
+        "yazi-rs/plugins:git" = {
+          rev = "9a1129c";
+          hash = "sha256-...";
+        };
+      }
+    '';
+  };
 
-        INSTALLED=()
-        if [ -f "$PKG_TOML" ]; then
-          while IFS= read -r plugin; do
-            INSTALLED+=("$plugin")
-          done < <(
-            ${pkgs.gawk}/bin/awk '
-              /^\[\[plugin\.deps\]\]$/ { in_plugin = 1; next }
-              /^\[/ { in_plugin = 0 }
-              in_plugin && match($0, /^[[:space:]]*use[[:space:]]*=[[:space:]]*"([^"]+)"[[:space:]]*$/, value) {
-                print value[1]
-                in_plugin = 0
-              }
-            ' "$PKG_TOML"
-          )
-        fi
+  config = lib.mkIf (cfg.plugins != {}) {
+    assertions = [
+      {
+        assertion = config.programs.yazi.enable;
+        message = "lumina.yazi.plugins requires programs.yazi.enable.";
+      }
+    ];
 
-        DESIRED=(${lib.escapeShellArgs desiredPlugins})
-
-        contains_plugin() {
-          local needle="$1"
-          shift
-
-          local plugin
-          for plugin in "$@"; do
-            if [ "$plugin" = "$needle" ]; then
-              return 0
-            fi
-          done
-          return 1
-        }
-
-        plugin_target() {
-          local plugin="$1"
-          local name
-
-          if [[ "$plugin" == *:* ]]; then
-            name="''${plugin#*:}"
-          else
-            name="''${plugin#*/}"
-          fi
-
-          printf '%s/plugins/%s.yazi' "$YAZI_CONFIG_DIR" "$name"
-        }
-
-        # Refuse to overwrite plugin directories that are not tracked by ya.
-        unmanaged=0
-        for plugin in "''${DESIRED[@]}"; do
-          if ! contains_plugin "$plugin" "''${INSTALLED[@]}"; then
-            target="$(plugin_target "$plugin")"
-            if [ -e "$target" ] || [ -L "$target" ]; then
-              echo "lumina-yazi-plugins: $plugin is declared but $target is not tracked in package.toml" >&2
-              printf 'lumina-yazi-plugins: move it aside with: mv -- %q %q\n' "$target" "$target.lumina-backup" >&2
-              unmanaged=1
-            fi
-          fi
-        done
-
-        if [ "$unmanaged" -ne 0 ]; then
-          echo "lumina-yazi-plugins: refusing to overwrite unmanaged plugin files; move or remove them, then reactivate" >&2
-          exit 1
-        fi
-
-        # Delete plugins no longer desired
-        for plugin in "''${INSTALLED[@]}"; do
-          if ! contains_plugin "$plugin" "''${DESIRED[@]}"; then
-            echo "lumina-yazi-plugins: removing $plugin"
-            if ! "$YA" pkg delete "$plugin"; then
-              echo "lumina-yazi-plugins: failed to remove $plugin" >&2
-              exit 1
-            fi
-          fi
-        done
-
-        # Add plugins not yet installed
-        for plugin in "''${DESIRED[@]}"; do
-          if ! contains_plugin "$plugin" "''${INSTALLED[@]}"; then
-            echo "lumina-yazi-plugins: adding $plugin"
-            if ! "$YA" pkg add "$plugin"; then
-              echo "lumina-yazi-plugins: failed to add $plugin" >&2
-              exit 1
-            fi
-          fi
-        done
-      '';
-    };
+    home.file = lib.listToAttrs (
+      lib.mapAttrsToList mkPlugin cfg.plugins
+    );
   };
 }
