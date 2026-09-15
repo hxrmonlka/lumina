@@ -10,5 +10,10 @@
       default = {};
       description = "Home Manager modules exported by Lumina.";
     };
+    nixosModules = lib.mkOption {
+      type = lib.types.lazyAttrsOf lib.types.unspecified;
+      default = {};
+      description = "NixOS modules exported by Lumina.";
+    };
   };
 }
