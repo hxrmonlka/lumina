@@ -1,4 +1,4 @@
-{ 
+{
   flake.homeModules.helium-extensions = {
     config,
     lib,
@@ -9,20 +9,20 @@
 
     fetchExtension = id: spec: let
       crx = pkgs.fetchurl {
-        url = "https://clients2.google.com/service/update2/crx?response=redirect&prodversion=131.0.0.0&acceptformat=crx2,crx3&x=id%3D${id}%26uc";
+        url = "https://clients2.google.com/service/update2/crx?response=redirect&prodversion=131.0.0.0&acceptformat=crx2,crx3&x=id%3D${id}%26v%3D${spec.version}%26uc";
         hash = spec.hash;
       };
     in
       pkgs.runCommand "helium-extension-${id}-${spec.version}" {
-        nativeBuildInputs = [pkgs.python3 pkgs.unzip];
+        nativeBuildInputs = [pkgs.python3];
       } ''
         set -eu
 
-        tmp="$TMPDIR/extension.zip"
-
-        ${pkgs.python3}/bin/python3 - "${crx}" "$tmp" <<'PY'
+        ${pkgs.python3}/bin/python3 - "${crx}" "$out" <<'PY'
+import os
 import struct
 import sys
+import zipfile
 
 src, dst = sys.argv[1:]
 with open(src, "rb") as f:
@@ -33,8 +33,9 @@ if data[:4] != b"Cr24":
 
 version = struct.unpack_from("<I", data, 4)[0]
 if version == 2:
-    header_size = struct.unpack_from("<I", data, 8)[0]
-    payload_offset = 16 + header_size
+    public_key_size = struct.unpack_from("<I", data, 8)[0]
+    signature_size = struct.unpack_from("<I", data, 12)[0]
+    payload_offset = 16 + public_key_size + signature_size
 elif version == 3:
     header_size = struct.unpack_from("<I", data, 8)[0]
     payload_offset = 12 + header_size
@@ -42,15 +43,18 @@ else:
     raise SystemExit(f"unsupported CRX version: {version}")
 
 payload = data[payload_offset:]
-if payload[:4] != b"PK\\x03\\x04":
+if payload[:4] != b"PK\x03\x04":
     raise SystemExit("CRX payload is not a ZIP archive")
 
-with open(dst, "wb") as f:
+os.makedirs(dst, exist_ok=True)
+zip_path = os.path.join(dst, "extension.zip")
+with open(zip_path, "wb") as f:
     f.write(payload)
-PY
 
-        mkdir -p "$out"
-        ${pkgs.unzip}/bin/unzip -q "$tmp" -d "$out"
+with zipfile.ZipFile(zip_path) as archive:
+    archive.extractall(dst)
+os.remove(zip_path)
+PY
 
         ${pkgs.python3}/bin/python3 - "$out/manifest.json" "${spec.version}" <<'PY'
 import json
