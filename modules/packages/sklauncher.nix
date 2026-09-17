@@ -1,10 +1,18 @@
-{ lib, ... }:
-
 {
-  perSystem = { pkgs, ... }:
+  inputs,
+  lib,
+  ...
+}: {
+  perSystem = { system, ... }:
     let
       pname = "sklauncher";
       version = "4.0.51";
+
+      pkgs = import inputs.nixpkgs {
+        inherit system;
+        config.allowUnfreePredicate = pkg:
+          builtins.elem (lib.getName pkg) [pname];
+      };
 
       src = pkgs.fetchurl {
         url = "https://github.com/sklauncher/binaries/releases/download/v${version}/SKlauncher-${version}-x86_64.AppImage";
