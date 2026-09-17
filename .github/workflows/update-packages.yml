@@ -1,0 +1,82 @@
+name: Update packages
+
+on:
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-packages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout un/test
+        uses: actions/checkout@v6
+        with:
+          ref: un/test
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Update packages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t packages < <(
+            nix eval --json .#packages.x86_64-linux \
+              | jq -r 'keys[]'
+          )
+
+          updated=0
+
+          for package in "${packages[@]}"; do
+            echo "::group::Checking ${package}"
+
+            # Only attempt packages whose derivation exposes a source.
+            if ! nix eval --raw ".#packages.x86_64-linux.${package}.src" >/dev/null 2>&1; then
+              echo "Skipping ${package}: no source to update."
+              echo "::endgroup::"
+              continue
+            fi
+
+            if nix run nixpkgs#nix-update -- \
+              "${package}" \
+              --flake \
+              --version=stable; then
+              updated=1
+            else
+              echo "nix-update could not update ${package}; leaving it unchanged."
+            fi
+
+            echo "::endgroup::"
+          done
+
+          if [ "${updated}" -eq 0 ]; then
+            echo "No package updates found."
+            exit 0
+          fi
+
+      - name: Validate updated flake
+        run: nix flake check --no-update-lock-file
+
+      - name: Commit updates to un/test
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add modules/packages
+          git commit -m "packages: update packages"
+          git push origin HEAD:un/test
