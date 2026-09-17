@@ -1,41 +1,29 @@
 {lib, ...}: let
-  allowedHosts = ["serpentine"];
-  allowedUsers = ["alice"];
-
-  mkHostAssertion = hostName: {
-    assertion = builtins.elem hostName allowedHosts;
-    message = "lumina/signature: host '${hostName}' is not authorized. Allowed: ${builtins.concatStringsSep ", " allowedHosts}.";
+  mkHostSignature = allowedHost: {config, ...}: {
+    assertions = [
+      {
+        assertion = (config.networking.hostName or "unknown") == allowedHost;
+        message = "lumina/signature: expected host '${allowedHost}', got '${config.networking.hostName or "unknown"}'.";
+      }
+    ];
   };
 
-  mkUserAssertion = hostName: userName: {
-    assertion =
-      builtins.elem hostName allowedHosts
-      && builtins.elem userName allowedUsers;
-    message =
-      "lumina/signature: host '${hostName}' / user '${userName}' is not authorized."
-      + " Allowed hosts: ${builtins.concatStringsSep ", " allowedHosts}."
-      + " Allowed users: ${builtins.concatStringsSep ", " allowedUsers}.";
-  };
-in {
-  # Library
-  flake.lib.signatures = {
-    inherit allowedHosts allowedUsers mkHostAssertion mkUserAssertion;
-  };
-
-  # NixOS module, import into a host configuration to gate it
-  flake.nixosModules.signature = {config, ...}: {
-    assertions = [(mkHostAssertion (config.networking.hostName or "unknown"))];
-  };
-
-  # Home Manager module, import into a user's HM imports to gate it
-  flake.homeModules.signature = {
+  mkUserSignature = allowedHost: allowedUser: {
     config,
     osConfig ? {},
     ...
-  }: let
-    hostName = osConfig.networking.hostName or "unknown";
-    userName = config.home.username or "unknown";
-  in {
-    assertions = [(mkUserAssertion hostName userName)];
+  }: {
+    assertions = [
+      {
+        assertion =
+          (osConfig.networking.hostName or "unknown") == allowedHost
+          && (config.home.username or "unknown") == allowedUser;
+        message = "lumina/signature: expected '${allowedUser}@${allowedHost}', got '${config.home.username or "unknown"}@${osConfig.networking.hostName or "unknown"}'.";
+      }
+    ];
+  };
+in {
+  flake.lib.signatures = {
+    inherit mkHostSignature mkUserSignature;
   };
 }
