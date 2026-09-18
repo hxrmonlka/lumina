@@ -120,7 +120,8 @@
         "ref": "main",
         "repo": "resources",
         "type": "github"
-      }
+      },
+      "flake": false
     }
   },
   "root": "root",
