@@ -21,10 +21,9 @@
     };
 
     config = lib.mkIf (cfg.extensions != []) {
-      environment.etc."chromium/policies/managed/lumina-helium.json".text =
-        builtins.toJSON {
-          ExtensionInstallForcelist = cfg.extensions;
-        };
+      environment.etc."chromium/policies/managed/lumina-helium.json".text = builtins.toJSON {
+        ExtensionInstallForcelist = cfg.extensions;
+      };
     };
   };
 }
