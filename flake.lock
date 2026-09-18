@@ -85,7 +85,8 @@
         "flake-parts": "flake-parts",
         "import-tree": "import-tree",
         "nixpkgs": "nixpkgs",
-        "wrapper-modules": "wrapper-modules"
+        "wrapper-modules": "wrapper-modules",
+        "grub-theme": "grub-theme"
       }
     },
     "wrapper-modules": {
@@ -103,6 +104,21 @@
       "original": {
         "owner": "BirdeeHub",
         "repo": "nix-wrapper-modules",
+        "type": "github"
+      }
+    },
+    "grub-theme": {
+      "locked": {
+        "lastModified": 1789754716,
+        "owner": "hxrmonlka",
+        "repo": "resources",
+        "rev": "6c6c394e15c32986c962a2d566928235fc990c06",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hxrmonlka",
+        "ref": "main",
+        "repo": "resources",
         "type": "github"
       }
     }
