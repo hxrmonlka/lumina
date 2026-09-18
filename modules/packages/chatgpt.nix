@@ -66,8 +66,6 @@
           nss
           pango
           pipewire
-          qt5.qtbase
-          qt6.qtbase
           stdenv.cc.cc.lib
           systemd
           wayland
@@ -226,6 +224,11 @@
           chmod +x "$out/bin/chatgpt"
 
           runHook postInstall
+        '';
+
+        preFixup = ''
+          addAutoPatchelfSearchPath "${pkgs.qt5.qtbase}/lib"
+          addAutoPatchelfSearchPath "${pkgs.qt6.qtbase}/lib"
         '';
 
         postFixup = ''
