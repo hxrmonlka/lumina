@@ -35,7 +35,7 @@
         nativeBuildInputs = with pkgs; [
           dpkg
           autoPatchelfHook
-          formatelf
+          auto-patchelf
           inotify-tools
           python3
         ];
@@ -108,7 +108,7 @@
           cp -r usr/share/applications/. "$out/share/applications/"
           cp -r usr/share/pixmaps/. "$out/share/pixmaps/"
 
-          install -Dm755 "$(command -v auto-formatelf)" "$out/libexec/auto-formatelf"
+          install -Dm755 "$(command -v auto-patchelf)" "$out/libexec/auto-patchelf"
           install -Dm755 "$(command -v inotifywait)" "$out/libexec/inotifywait"
 
           python3 - "$out/lib/chatgpt/resources/app.asar" <<'PY'
@@ -188,17 +188,23 @@
           patch_runtimes() {
             local dir stamp want interp
             interp="\$(< "$NIX_CC/nix-support/dynamic-linker")"
+            local libs=(
+              "${pkgs.stdenv.cc.cc.lib}/lib"
+              "${pkgs.zlib}/lib"
+              "${pkgs.libxcrypt-legacy}/lib"
+              "${pkgs.curl}/lib"
+              "${pkgs.nss}/lib"
+              "${pkgs.nspr}/lib"
+            )
             for dir in "\$runtime_root"/*/; do
               [[ -f "\$dir/runtime.json" ]] || continue
               want="\$(cat "\$dir/runtime.json"; printf '%s\n' "\$interp")"
               stamp="\$dir/.nix-patched"
               [[ -f "\$stamp" && "\$(cat "\$stamp")" == "\$want" ]] && continue
-              auto-formatelf -j 0 \
-                --interpreter "\$interp" \
-                --libc "$NIX_CC/nix-support/../lib" \
+              auto-patchelf \
                 --paths "\$dir" \
-                --libs "$out/libexec/lib-paths" \
-                --ignore-missing '$ORIGIN/*' 'libcurl-gnutls.so.4' \
+                --libs "\''${libs[@]}" \
+                --ignore-missing 'libcurl-gnutls.so.4' \
                 >/dev/null 2>&1 || true
               printf '%s' "\$want" > "\$stamp"
             done
@@ -218,15 +224,6 @@
           exec "$out/lib/chatgpt/codex-launcher" "\$@"
           EOF
           chmod +x "$out/bin/chatgpt"
-
-          printf '%s\n' \
-            "${pkgs.stdenv.cc.cc.lib}/lib" \
-            "${pkgs.zlib}/lib" \
-            "${pkgs.libxcrypt-legacy}/lib" \
-            "${pkgs.curl}/lib" \
-            "${pkgs.nss}/lib" \
-            "${pkgs.nspr}/lib" \
-            > "$out/libexec/lib-paths"
 
           runHook postInstall
         '';
