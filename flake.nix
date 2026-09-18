@@ -8,7 +8,7 @@
     wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
 
     grub-theme = {
-      url = "github:hxrmonlka/resources/main";
+      url = "github:hxrmonlka/resources/grub";
       flake = false;
     };
   };
