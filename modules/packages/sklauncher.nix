@@ -18,7 +18,7 @@
       hash = "sha256-sLycp9tVV1MzRdFJmmJi5UUT3SroQdWFyxg9tsk/2Qs=";
     };
 
-    appimageContents = pkgs.appimageTools.extractType2 {inherit pname version src;};
+    appimageContents = pkgs.appimageTools.extract {inherit pname version src;};
   in {
     packages.sklauncher = pkgs.appimageTools.wrapType2 {
       inherit pname version src;
