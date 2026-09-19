@@ -11,6 +11,11 @@
       url = "github:hxrmonlka/resources/grub";
       flake = false;
     };
+
+    fastfetch = {
+      url = "github:hxrmonlka/resources/fastfetch";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
