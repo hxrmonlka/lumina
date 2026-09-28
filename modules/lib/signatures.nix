@@ -22,8 +22,21 @@
       }
     ];
   };
+
+  mkStandaloneSignature = allowedHost: allowedUser: {
+    config,
+    hostName ? "unknown",
+    ...
+  }: {
+    assertions = [
+      {
+        assertion = hostName == allowedHost && (config.home.username or "unknown") == allowedUser;
+        message = "lumina/signature: expected '${allowedUser}@${allowedHost}', got '${config.home.username or "unknown"}@${hostName}'.";
+      }
+    ];
+  };
 in {
   flake.lib.signatures = {
-    inherit mkHostSignature mkUserSignature;
+    inherit mkHostSignature mkUserSignature mkStandaloneSignature;
   };
 }

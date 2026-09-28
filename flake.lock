@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "fastfetch": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789794204,
+        "narHash": "sha256-WQYA7x5vng8CAOkAkPNqJN4cEk3NHoS+BjV4FNnRInc=",
+        "owner": "hxrmonlka",
+        "repo": "resources",
+        "rev": "6d2ade7af7d061a486b26c87ff500cf3b8f0247b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hxrmonlka",
+        "ref": "fastfetch",
+        "repo": "resources",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": "nixpkgs-lib"
@@ -15,6 +32,23 @@
       "original": {
         "owner": "hercules-ci",
         "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "grub-theme": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789740240,
+        "narHash": "sha256-+kiMd7GhrZSX1oLz1Vn16KaU1WwF7Vb3P2Mgj5RJaU8=",
+        "owner": "hxrmonlka",
+        "repo": "resources",
+        "rev": "7c448b7e9246088ac9d97860604a03ca2d77e700",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hxrmonlka",
+        "ref": "grub",
+        "repo": "resources",
         "type": "github"
       }
     },
@@ -82,11 +116,12 @@
     },
     "root": {
       "inputs": {
+        "fastfetch": "fastfetch",
         "flake-parts": "flake-parts",
+        "grub-theme": "grub-theme",
         "import-tree": "import-tree",
         "nixpkgs": "nixpkgs",
-        "wrapper-modules": "wrapper-modules",
-        "grub-theme": "grub-theme"
+        "wrapper-modules": "wrapper-modules"
       }
     },
     "wrapper-modules": {
@@ -106,22 +141,6 @@
         "repo": "nix-wrapper-modules",
         "type": "github"
       }
-    },
-    "grub-theme": {
-      "locked": {
-        "lastModified": 1789711516,
-        "owner": "hxrmonlka",
-        "repo": "resources",
-        "rev": "6c6c394e15c32986c962a2d566928235fc990c06",
-        "type": "github"
-      },
-      "original": {
-        "owner": "hxrmonlka",
-        "ref": "main",
-        "repo": "resources",
-        "type": "github"
-      },
-      "flake": false
     }
   },
   "root": "root",
