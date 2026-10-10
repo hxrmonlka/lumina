@@ -4,7 +4,7 @@
   pkgs,
   ...
 }: let
-  cfg = config.hardware.alice.nvidia;
+  cfg = config.hardware.lumina.nvidia;
 
   # Map our simplified driver names to nixpkgs kernel package attributes.
   driverPackage =
@@ -23,8 +23,8 @@
   # Exactly one of intelBusId / amdBusId should be set for hybrid setups.
   hasPrimePeer = cfg.prime.intelBusId != "" || cfg.prime.amdBusId != "";
 in {
-  options.hardware.alice.nvidia = {
-    enable = lib.mkEnableOption "Alice – Nvidia GPU driver";
+  options.hardware.lumina.nvidia = {
+    enable = lib.mkEnableOption "Lumina – Nvidia GPU driver";
 
     open = lib.mkOption {
       type = lib.types.bool;
@@ -120,9 +120,9 @@ in {
       {
         assertion = !primeEnabled || hasPrimePeer;
         message = ''
-          `hardware.alice.nvidia.prime.enable` requires either
-          `hardware.alice.nvidia.prime.intelBusId` or
-          `hardware.alice.nvidia.prime.amdBusId` to be set.
+          `hardware.lumina.nvidia.prime.enable` requires either
+          `hardware.lumina.nvidia.prime.intelBusId` or
+          `hardware.lumina.nvidia.prime.amdBusId` to be set.
         '';
       }
     ];

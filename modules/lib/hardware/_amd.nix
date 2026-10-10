@@ -4,12 +4,12 @@
   pkgs,
   ...
 }: let
-  cfgGpu = config.hardware.alice.amd.gpu;
-  cfgCpu = config.hardware.alice.amd.cpu;
+  cfgGpu = config.hardware.lumina.amd.gpu;
+  cfgCpu = config.hardware.lumina.amd.cpu;
 in {
-  options.hardware.alice.amd = {
+  options.hardware.lumina.amd = {
     gpu = {
-      enable = lib.mkEnableOption "Alice – AMD GPU (amdgpu) driver";
+      enable = lib.mkEnableOption "Lumina – AMD GPU (amdgpu) driver";
 
       earlyKms = lib.mkOption {
         type = lib.types.bool;
@@ -60,7 +60,7 @@ in {
     };
 
     cpu = {
-      enable = lib.mkEnableOption "Alice – AMD CPU power/perf tuning";
+      enable = lib.mkEnableOption "Lumina – AMD CPU power/perf tuning";
 
       pstate = lib.mkOption {
         type = lib.types.bool;

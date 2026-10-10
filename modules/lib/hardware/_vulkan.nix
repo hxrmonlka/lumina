@@ -4,7 +4,7 @@
   pkgs,
   ...
 }: let
-  cfg = config.hardware.alice.vulkan;
+  cfg = config.hardware.lumina.vulkan;
 
   # Resolve the ICD JSON path for a given driver name.
   # Mesa drivers live under mesa.drivers; nvidia is placed at a fixed path by
@@ -31,8 +31,8 @@
     "nvidia" = "/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.json";
   };
 in {
-  options.hardware.alice.vulkan = {
-    enable = lib.mkEnableOption "Alice – Vulkan support";
+  options.hardware.lumina.vulkan = {
+    enable = lib.mkEnableOption "Lumina – Vulkan support";
 
     support32Bit = lib.mkOption {
       type = lib.types.bool;
@@ -169,15 +169,15 @@ in {
       {
         assertion = cfg.defaultDriver != "amdvlk" || cfg.amd.amdvlk;
         message = ''
-          `hardware.alice.vulkan.defaultDriver = "amdvlk"` requires
-          `hardware.alice.vulkan.amd.amdvlk = true`.
+          `hardware.lumina.vulkan.defaultDriver = "amdvlk"` requires
+          `hardware.lumina.vulkan.amd.amdvlk = true`.
         '';
       }
       {
         assertion = cfg.defaultDriver != "nvk" || cfg.nvidia.nvk;
         message = ''
-          `hardware.alice.vulkan.defaultDriver = "nvk"` requires
-          `hardware.alice.vulkan.nvidia.nvk = true`.
+          `hardware.lumina.vulkan.defaultDriver = "nvk"` requires
+          `hardware.lumina.vulkan.nvidia.nvk = true`.
         '';
       }
     ];

@@ -1,7 +1,7 @@
 # Examples:
 #   imports = [ (inputs.lumina.lib.hardware.mkFramework inputs.nixos-hardware) ];
 #
-#   hardware.alice.framework = {
+#   hardware.lumina.framework = {
 #     enable = true;
 #     model  = "13-amd-7040";
 #
@@ -29,7 +29,7 @@ nixosHardware:
     ...
   }:
   let
-    cfg = config.hardware.alice.framework;
+    cfg = config.hardware.lumina.framework;
 
     # Map model strings → nixos-hardware module attribute names.
     nixosHwModuleAttr = {
@@ -46,7 +46,7 @@ nixosHardware:
 
     hwModule =
       nixosHardware.nixosModules.${nixosHwModuleAttr.${cfg.model}}
-        or (throw "hardware.alice.framework.model: unknown model '${cfg.model}'");
+        or (throw "hardware.lumina.framework.model: unknown model '${cfg.model}'");
 
     hasNvdGpu = cfg.model == "16-amd-ai300-nvidia";
   in
@@ -55,8 +55,8 @@ nixosHardware:
     imports = lib.optional cfg.enable hwModule;
 
     # ── Option declarations ────────────────────────────────────────────────
-    options.hardware.alice.framework = {
-      enable = lib.mkEnableOption "Alice – Framework laptop hardware profile";
+    options.hardware.lumina.framework = {
+      enable = lib.mkEnableOption "Lumina – Framework laptop hardware profile";
 
       model = lib.mkOption {
         type = lib.types.enum [
@@ -140,9 +140,9 @@ nixosHardware:
         {
           assertion = !hasNvdGpu || (cfg.nvidia.nvidiaBusId != "" && cfg.nvidia.amdBusId != "");
           message = ''
-            `hardware.alice.framework.model = "16-amd-ai300-nvidia"` requires both
-            `hardware.alice.framework.nvidia.nvidiaBusId` and
-            `hardware.alice.framework.nvidia.amdBusId` to be set.
+            `hardware.lumina.framework.model = "16-amd-ai300-nvidia"` requires both
+            `hardware.lumina.framework.nvidia.nvidiaBusId` and
+            `hardware.lumina.framework.nvidia.amdBusId` to be set.
           '';
         }
       ];

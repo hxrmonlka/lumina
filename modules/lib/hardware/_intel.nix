@@ -4,8 +4,8 @@
   pkgs,
   ...
 }: let
-  cfgGpu = config.hardware.alice.intel.gpu;
-  cfgCpu = config.hardware.alice.intel.cpu;
+  cfgGpu = config.hardware.lumina.intel.gpu;
+  cfgCpu = config.hardware.lumina.intel.cpu;
 
   gen = cfgGpu.generation;
 
@@ -13,9 +13,9 @@
   isLegacy = gen == "legacy"; # 5th–10th gen incl. Coffee Lake 8th gen
   isXe = gen == "xe"; # 12th-gen+ / Iris Xe / Arc
 in {
-  options.hardware.alice.intel = {
+  options.hardware.lumina.intel = {
     gpu = {
-      enable = lib.mkEnableOption "Alice – Intel GPU driver";
+      enable = lib.mkEnableOption "Lumina – Intel GPU driver";
 
       generation = lib.mkOption {
         type = lib.types.enum [
@@ -84,7 +84,7 @@ in {
     };
 
     cpu = {
-      enable = lib.mkEnableOption "Alice – Intel CPU tuning";
+      enable = lib.mkEnableOption "Lumina – Intel CPU tuning";
 
       pstate = lib.mkOption {
         type = lib.types.bool;
@@ -103,15 +103,15 @@ in {
       assertions = [
         {
           assertion = !cfgGpu.openclNeo || isXe;
-          message = "hardware.alice.intel.gpu.openclNeo requires generation = \"xe\"";
+          message = "hardware.lumina.intel.gpu.openclNeo requires generation = \"xe\"";
         }
         {
           assertion = !cfgGpu.openclLegacy || isLegacy;
-          message = "hardware.alice.intel.gpu.openclLegacy requires generation = \"legacy\"";
+          message = "hardware.lumina.intel.gpu.openclLegacy requires generation = \"legacy\"";
         }
         {
           assertion = !cfgGpu.hybridCodec || isLegacy;
-          message = "hardware.alice.intel.gpu.hybridCodec requires generation = \"legacy\"";
+          message = "hardware.lumina.intel.gpu.hybridCodec requires generation = \"legacy\"";
         }
       ];
 
