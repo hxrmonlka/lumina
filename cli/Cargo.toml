@@ -1,9 +1,12 @@
 [package]
 name = "lumina-cli"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Command line tool for Lumina"
 
 [[bin]]
 name = "lumina"
 path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
