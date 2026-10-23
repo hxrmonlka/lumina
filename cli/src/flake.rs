@@ -1,13 +1,13 @@
 use std::io::ErrorKind;
 use std::path::Path;
-use std::process::{Command, ExitCode};
+use std::process::Command;
 
 use crate::error::{runtime, Result};
 use crate::location::DOTFILES_VAR;
 
 const FLAKE_INPUT: &str = "lumina";
 
-pub fn update_lock(dir: &Path) -> Result<ExitCode> {
+pub fn update_lock(dir: &Path) -> Result<()> {
     eprintln!("lumina: updating '{FLAKE_INPUT}' in {}", dir.display());
 
     let status = Command::new("nix")
@@ -31,9 +31,9 @@ pub fn update_lock(dir: &Path) -> Result<ExitCode> {
         Err(error) => return runtime(format!("cannot run nix: {error}")),
     };
 
-    Ok(match status.code() {
-        Some(0) => ExitCode::SUCCESS,
-        Some(code) => ExitCode::from(u8::try_from(code).unwrap_or(1)),
-        None => ExitCode::FAILURE,
-    })
+    if status.success() {
+        Ok(())
+    } else {
+        runtime(format!("'nix flake update' failed ({status})."))
+    }
 }

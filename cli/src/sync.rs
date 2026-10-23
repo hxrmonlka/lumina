@@ -1,14 +1,21 @@
 use std::process::ExitCode;
 
 use crate::error::{usage, Result};
-use crate::targets::{self, TARGETS};
+use crate::targets::{self, Target, TARGETS};
 use crate::{flake, host, location};
 
-const USAGE: &str = "\
-Usage: lumina sync [--loc <path>] [<category/name>...]
+const REV_ATOM: &str = "self/rev";
 
-Without targets, update the lumina input in the flake.lock of the local Alice copy.
-With targets, sync each target into the local Alice copy.
+enum Step {
+    Rev,
+    File(&'static Target),
+}
+
+const USAGE: &str = "\
+Usage: lumina sync [--loc <path>] <category/name>...
+
+Sync each target into the local Alice copy.
+The target self/rev updates the lumina input in the flake.lock of the local Alice copy.
 You can run this command from any directory.
 
 Options:
@@ -55,32 +62,48 @@ pub fn run(args: &[String]) -> Result<ExitCode> {
     }
 
     if atoms.is_empty() {
-        let dir = location::resolve(loc)?;
-        return flake::update_lock(&dir);
+        return usage("no target. Run 'lumina sync --list'.");
     }
 
     let host = host::detect();
-    let mut selected = Vec::new();
+    let mut steps = Vec::new();
 
     for atom in atoms {
+        if atom == REV_ATOM {
+            steps.push(Step::Rev);
+            continue;
+        }
+
         let Some(target) = targets::find(atom) else {
             return usage(format!("unknown target '{atom}'. Run 'lumina sync --list'."));
         };
         target.check_host(&host)?;
-        selected.push(target);
+        steps.push(Step::File(target));
     }
 
     let root = location::resolve(loc)?;
 
-    for target in selected {
-        target.run(&root)?;
+    for step in steps {
+        match step {
+            Step::Rev => flake::update_lock(&root)?,
+            Step::File(target) => {
+                target.run(&root)?;
+            }
+        }
     }
 
     Ok(ExitCode::SUCCESS)
 }
 
 fn print_list() {
-    let width = TARGETS.iter().map(|target| target.atom.len()).max().unwrap_or(0);
+    let width = TARGETS
+        .iter()
+        .map(|target| target.atom.len())
+        .chain([REV_ATOM.len()])
+        .max()
+        .unwrap_or(0);
+
+    println!("{REV_ATOM:<width$}  all");
 
     for target in TARGETS {
         println!("{:<width$}  {}", target.atom, target.hosts.join(", "));
