@@ -1,0 +1,56 @@
+diff --git a/include/mango/dispatch/bind.h b/include/mango/dispatch/bind.h
+index 46a4114..36629d0 100644
+--- a/include/mango/dispatch/bind.h
++++ b/include/mango/dispatch/bind.h
+@@ -39,6 +39,7 @@ int32_t group_leave(const Arg *arg);
+ void client_group_join(Client *need_join, Client *need_replace);
+ bool client_group_leave(Client *tc);
+ int32_t toggle_overview(const Arg *arg);
++int32_t set_gray(const Arg *arg);
+ int32_t enter_overview(const Arg *arg);
+ int32_t leave_overview(const Arg *arg);
+ int32_t switcher(const Arg *arg);
+diff --git a/src/config/binding_parse.c b/src/config/binding_parse.c
+index ed3c9be..802af0d 100644
+--- a/src/config/binding_parse.c
++++ b/src/config/binding_parse.c
+@@ -563,6 +563,14 @@ FuncType parse_func_name(char *func_name, Arg *arg, char *arg_value,
+ 		bool has_name = arg_value2 && arg_value2[0] != '\0' &&
+ 						!(strlen(arg_value2) == 1 && arg_value2[0] == '0');
+ 		(*arg).v = has_name ? strdup(arg_value2) : NULL;
++	} else if (strcmp(func_name, "setgray") == 0) {
++		func = set_gray;
++		if (strcmp(arg_value, "on") == 0)
++			(*arg).i = 1;
++		else if (strcmp(arg_value, "off") == 0)
++			(*arg).i = 0;
++		else
++			(*arg).i = -1;
+ 	} else if (strcmp(func_name, "toggleoverview") == 0) {
+ 		func = toggle_overview;
+ 		(*arg).i = atoi(arg_value) == 1;
+diff --git a/src/dispatch/bind.c b/src/dispatch/bind.c
+index a64df77..35f6e0e 100644
+--- a/src/dispatch/bind.c
++++ b/src/dispatch/bind.c
+@@ -1,4 +1,5 @@
+ #include "mango/dispatch/bind.h"
++#include <scenefx/types/wlr_scene.h>
+ #include "mango/animation/client.h"
+ #include "mango/common/log.h"
+ #include "mango/common/server.h"
+@@ -1680,6 +1681,14 @@ int32_t toggle_named_scratchpad(const Arg *arg) {
+ 	return 0;
+ }
+ 
++int32_t set_gray(const Arg *arg) {
++	static bool gray = false;
++
++	gray = arg->i < 0 ? !gray : arg->i > 0;
++	wlr_scene_set_output_saturation(server.scene, gray ? 0.0f : 1.0f);
++	return 0;
++}
++
+ int32_t toggle_render_border(const Arg *arg) {
+ 	if (!server.selected_monitor)
+ 		return 0;

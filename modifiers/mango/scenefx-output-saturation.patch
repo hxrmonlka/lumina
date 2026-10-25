@@ -1,0 +1,189 @@
+diff --git a/include/scenefx/render/pass.h b/include/scenefx/render/pass.h
+index 0ef3750..91f478b 100644
+--- a/include/scenefx/render/pass.h
++++ b/include/scenefx/render/pass.h
+@@ -25,6 +25,7 @@ struct fx_gles_render_pass {
+ 	// NULL when no advanced effects like blur is being used in the current pass.
+ 	// Call `fx_render_pass_init_offscreen_buffers` to use advanced effects.
+ 	struct fx_offscreen_buffers *fx_offscreen_buffers;
++	float output_saturation;
+ };
+ 
+ struct fx_gradient {
+diff --git a/include/scenefx/types/wlr_scene.h b/include/scenefx/types/wlr_scene.h
+index ac1bc49..8392228 100644
+--- a/include/scenefx/types/wlr_scene.h
++++ b/include/scenefx/types/wlr_scene.h
+@@ -126,6 +126,7 @@ struct wlr_scene {
+ 		bool highlight_transparent_region;
+ 
+ 		struct blur_data blur_data;
++		float output_saturation;
+ 	} WLR_PRIVATE;
+ };
+ 
+@@ -433,6 +434,10 @@ void wlr_scene_set_blur_contrast(struct wlr_scene *scene, float contrast);
+ // Sets the global blur saturation parameter
+ void wlr_scene_set_blur_saturation(struct wlr_scene *scene, float saturation);
+ 
++// Sets the saturation applied to the final output of every scene output.
++// 1.0 is unchanged, 0.0 is grayscale.
++void wlr_scene_set_output_saturation(struct wlr_scene *scene, float saturation);
++
+ /**
+  * Handles linux_dmabuf_v1 feedback for all surfaces in the scene.
+  *
+diff --git a/render/fx_renderer/fx_pass.c b/render/fx_renderer/fx_pass.c
+index 39b6226..ed2e22c 100644
+--- a/render/fx_renderer/fx_pass.c
++++ b/render/fx_renderer/fx_pass.c
+@@ -101,6 +101,8 @@ bool fx_render_pass_init_offscreen_buffers(struct wlr_render_pass *render_pass,
+ 
+ static const struct wlr_render_pass_impl render_pass_impl;
+ 
++static void render_output_saturation(struct fx_gles_render_pass *pass);
++
+ struct fx_gles_render_pass *fx_get_render_pass(struct wlr_render_pass *render_pass) {
+ 	assert(render_pass->impl == &render_pass_impl);
+ 	struct fx_gles_render_pass *pass = wl_container_of(render_pass, pass, base);
+@@ -116,6 +118,10 @@ static bool render_pass_submit(struct wlr_render_pass *wlr_pass) {
+ 	TRACY_BOTH_ZONES_START(pass->buffer->renderer);
+ 	push_fx_debug(renderer);
+ 
++	if (pass->output_saturation != 1.0f && pass->fx_offscreen_buffers != NULL) {
++		render_output_saturation(pass);
++	}
++
+ 	if (timer) {
+ 		// clear disjoint flag
+ 		GLint64 disjoint;
+@@ -1290,6 +1296,59 @@ done:
+ 	pixman_region32_fini(&region);
+ }
+ 
++static void render_output_saturation(struct fx_gles_render_pass *pass) {
++	struct fx_renderer *renderer = pass->buffer->renderer;
++	struct wlr_buffer *wlr_buffer = pass->buffer->buffer;
++	struct fx_framebuffer *effects = pass->fx_offscreen_buffers->effects_buffer;
++
++	struct wlr_texture *wlr_texture =
++		fx_texture_from_buffer(&renderer->wlr_renderer, wlr_buffer);
++	if (wlr_texture == NULL) {
++		return;
++	}
++	struct fx_texture *texture = fx_get_texture(wlr_texture);
++	struct blur_effects_shader shader = renderer->shaders.blur_effects;
++
++	struct wlr_box dst_box = { 0, 0, wlr_buffer->width, wlr_buffer->height };
++	struct wlr_fbox src_fbox = { 0, 0, 1, 1 };
++	pixman_region32_t region;
++	pixman_region32_init_rect(&region, 0, 0, wlr_buffer->width, wlr_buffer->height);
++
++	push_fx_debug(renderer);
++
++	fx_framebuffer_bind(effects);
++
++	glDisable(GL_BLEND);
++	glDisable(GL_STENCIL_TEST);
++
++	glUseProgram(shader.program);
++
++	glActiveTexture(GL_TEXTURE0);
++	glBindTexture(texture->target, texture->tex);
++	glTexParameteri(texture->target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++	glTexParameteri(texture->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++
++	glUniform1i(shader.tex, 0);
++	glUniform1f(shader.noise, 0.0f);
++	glUniform1f(shader.brightness, 1.0f);
++	glUniform1f(shader.contrast, 1.0f);
++	glUniform1f(shader.saturation, pass->output_saturation);
++
++	set_proj_matrix(shader.proj, pass->projection_matrix, &dst_box);
++	set_tex_matrix(shader.tex_proj, WL_OUTPUT_TRANSFORM_NORMAL, &src_fbox);
++
++	render(&dst_box, &region, shader.pos_attrib);
++
++	glBindTexture(texture->target, 0);
++	pop_fx_debug(renderer);
++
++	wlr_texture_destroy(wlr_texture);
++
++	fx_render_pass_read_to_buffer(pass, &region, pass->buffer, effects);
++
++	pixman_region32_fini(&region);
++}
++
+ static const char *reset_status_str(GLenum status) {
+ 	switch (status) {
+ 	case GL_GUILTY_CONTEXT_RESET_KHR:
+@@ -1341,6 +1400,7 @@ struct fx_gles_render_pass *fx_begin_buffer_pass(struct fx_framebuffer *buffer,
+ 	pass->fx_offscreen_buffers = NULL;
+ 	pixman_region32_init(&pass->blur_padding_region);
+ 	pass->has_blur = false;
++	pass->output_saturation = 1.0f;
+ 
+ 	matrix_projection(pass->projection_matrix, wlr_buffer->width, wlr_buffer->height,
+ 		WL_OUTPUT_TRANSFORM_FLIPPED_180);
+diff --git a/types/scene/wlr_scene.c b/types/scene/wlr_scene.c
+index 9a9fcc0..6c44d26 100644
+--- a/types/scene/wlr_scene.c
++++ b/types/scene/wlr_scene.c
+@@ -233,6 +233,7 @@ struct wlr_scene *wlr_scene_create(void) {
+ 	scene->highlight_transparent_region = env_parse_bool("WLR_SCENE_HIGHLIGHT_TRANSPARENT_REGION");
+ 
+ 	scene->blur_data = blur_data_get_default();
++	scene->output_saturation = 1.0f;
+ 
+ 	return scene;
+ }
+@@ -1282,6 +1283,22 @@ void wlr_scene_set_blur_saturation(struct wlr_scene *scene, float saturation) {
+ 	scene_node_update(&scene->tree.node, NULL);
+ }
+ 
++void wlr_scene_set_output_saturation(struct wlr_scene *scene, float saturation) {
++	if (saturation < 0.0f) {
++		saturation = 0.0f;
++	}
++	if (scene->output_saturation == saturation) {
++		return;
++	}
++	scene->output_saturation = saturation;
++
++	struct wlr_scene_output *scene_output;
++	wl_list_for_each(scene_output, &scene->outputs, link) {
++		scene_output_damage_whole(scene_output);
++		wlr_output_schedule_frame(scene_output->output);
++	}
++}
++
+ struct wlr_scene_optimized_blur *wlr_scene_optimized_blur_create(
+ 		struct wlr_scene_tree *parent, int width, int height) {
+ 	struct wlr_scene_optimized_blur *scene_blur = calloc(1, sizeof(*scene_blur));
+@@ -3082,6 +3099,10 @@ bool wlr_scene_output_build_state(struct wlr_scene_output *scene_output,
+ 	enum wlr_scene_debug_damage_option debug_damage =
+ 		scene_output->scene->debug_damage_option;
+ 
++	if (scene_output->scene->output_saturation != 1.0f) {
++		scene_output_damage_whole(scene_output);
++	}
++
+ 	bool render_gamma_lut = false;
+ 	if (wlr_output_get_gamma_size(output) == 0 && output->renderer->features.output_color_transform) {
+ 		if (scene_output->gamma_lut_color_transform != scene_output->prev_gamma_lut_color_transform) {
+@@ -3193,6 +3214,7 @@ bool wlr_scene_output_build_state(struct wlr_scene_output *scene_output,
+ 	// - Damage highlight debugging is not enabled
+ 	enum scene_direct_scanout_result scanout_result = SCANOUT_INELIGIBLE;
+ 	if (options->color_transform == NULL && !render_gamma_lut && list_len == 1
++			&& scene_output->scene->output_saturation == 1.0f
+ 			&& debug_damage != WLR_SCENE_DEBUG_DAMAGE_HIGHLIGHT) {
+ 		scanout_result = scene_entry_try_direct_scanout(&list_data[0], state, &render_data);
+ 	}
+@@ -3291,6 +3313,7 @@ bool wlr_scene_output_build_state(struct wlr_scene_output *scene_output,
+ 		&render_data.damage);
+ 
+ 	struct fx_gles_render_pass *fx_pass = fx_get_render_pass(render_pass);
++	fx_pass->output_saturation = scene_output->scene->output_saturation;
+ 	bool should_compensate_blur = false;
+ 	if (fx_render_pass_init_offscreen_buffers(render_pass, output)
+ 			&& pixman_region32_not_empty(&render_data.damage)) {
