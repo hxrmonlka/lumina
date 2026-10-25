@@ -1,14 +1,14 @@
 {lib, ...}: {
   perSystem = {pkgs, ...}: let
     pname = "libron-font";
-    version = "0.31";
+    version = "0.32";
   in {
     packages.libron-font = pkgs.stdenvNoCC.mkDerivation {
       inherit pname version;
 
       src = pkgs.fetchurl {
         url = "https://github.com/nicoverbruggen/libron/releases/download/v${version}/Libron.zip";
-        hash = "sha256-zpo1W0axHCy+FY6RSe4To/qBPKKGYdh4cj1y9HcyQDM=";
+        hash = "sha256-QWhjFONJ/YAyYUm519eR/7fLVHpeg1ba6BmDG0ex/Z8=";
       };
 
       nativeBuildInputs = [pkgs.unzip];
