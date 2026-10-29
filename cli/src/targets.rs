@@ -52,12 +52,12 @@ pub const TARGETS: &[Target] = &[
         atom: "settings/noctalia",
         hosts: &["tanuki"],
         source: Source::Command {
-            program: "qs",
-            args: &["-c", "noctalia-shell", "ipc", "call", "state", "all"],
-            hint: "Is Noctalia running?",
+            program: "noctalia",
+            args: &["config", "export"],
+            hint: "Is Noctalia installed and is its configuration valid?",
         },
-        dest: "modules/home/konoe/desktop/noctalia.json",
-        json: true,
+        dest: "modules/home/konoe/desktop/noctalia.toml",
+        json: false,
         precommit: false,
     },
     Target {
