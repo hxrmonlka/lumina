@@ -5,7 +5,7 @@
 }: {
   perSystem = {system, ...}: let
     pname = "sklauncher";
-    version = "4.0.55";
+    version = "4.0.56";
 
     pkgs = import inputs.nixpkgs {
       inherit system;
@@ -15,7 +15,7 @@
 
     src = pkgs.fetchurl {
       url = "https://github.com/sklauncher/binaries/releases/download/v${version}/SKlauncher-${version}-x86_64.AppImage";
-      hash = "sha256-M/j5BgnQ8TZaF+eLfZyEUm+1yhAG/dtOlDf2+8+P7jc=";
+      hash = "sha256-w9+MdFIc6e2Y01zJqhEk0os2fjxGRlcq4JO1svjrS7E=";
     };
 
     appimageContents = pkgs.appimageTools.extract {inherit pname version src;};
