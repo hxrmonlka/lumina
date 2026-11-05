@@ -18,6 +18,7 @@
     applyCommand = pkgs.writeShellApplication {
       name = "lumina-spicetify-apply";
       runtimeInputs = [liveApply];
+      excludeShellChecks = ["SC2016"];
       text = ''
         colors=${lib.escapeShellArg cfg.colors.file}
         if [ ! -f "$colors" ]; then
