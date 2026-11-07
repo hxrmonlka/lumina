@@ -30,7 +30,7 @@ pub struct Target {
 pub const TARGETS: &[Target] = &[
     Target {
         atom: "settings/dms",
-        hosts: &["serpentine"],
+        hosts: &["ekpyrosis"],
         source: Source::Command {
             program: "dms",
             args: &["ipc", "call", "settings", "dump"],
@@ -42,7 +42,7 @@ pub const TARGETS: &[Target] = &[
     },
     Target {
         atom: "settings/dms-kdl",
-        hosts: &["serpentine"],
+        hosts: &["ekpyrosis"],
         source: Source::HomeFile(".config/niri/dms/colors.kdl"),
         dest: "modules/home/alice/desktop/dms-colors.kdl",
         json: false,
