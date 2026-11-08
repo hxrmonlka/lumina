@@ -40,7 +40,16 @@
       name = "spotify";
       runtimeInputs = [applyCommand];
       text = ''
-        lumina-spicetify-apply
+        prefs="''${XDG_CONFIG_HOME:-${config.xdg.configHome}}/spotify/prefs"
+        vanilla_spotify=${lib.escapeShellArg "${cfg.spotifyPackage}/share/spotify/spotify"}
+        if [ ! -s "$prefs" ]; then
+          printf '%s\n' "Spotify preferences are missing. Starting vanilla Spotify to initialize the profile." >&2
+          exec "$vanilla_spotify" "$@"
+        fi
+        if ! lumina-spicetify-apply; then
+          printf '%s\n' "Spicetify could not be applied. Starting vanilla Spotify instead." >&2
+          exec "$vanilla_spotify" "$@"
+        fi
         exec ${lib.escapeShellArg "${cfg.liveDir}/spotify"} "$@"
       '';
     };
