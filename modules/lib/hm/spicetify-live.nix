@@ -36,6 +36,7 @@
         exec ${lib.getExe liveApply} "''${args[@]}"
       '';
     };
+    launchFlags = lib.escapeShellArgs cfg.launchFlags;
     spotifyLauncher = pkgs.writeShellApplication {
       name = "spotify";
       runtimeInputs = [applyCommand];
@@ -44,13 +45,13 @@
         vanilla_spotify=${lib.escapeShellArg "${cfg.spotifyPackage}/share/spotify/spotify"}
         if [ ! -s "$prefs" ]; then
           printf '%s\n' "Spotify preferences are missing. Starting vanilla Spotify to initialize the profile." >&2
-          exec "$vanilla_spotify" "$@"
+          exec "$vanilla_spotify" ${launchFlags} "$@"
         fi
         if ! lumina-spicetify-apply; then
           printf '%s\n' "Spicetify could not be applied. Starting vanilla Spotify instead." >&2
-          exec "$vanilla_spotify" "$@"
+          exec "$vanilla_spotify" ${launchFlags} "$@"
         fi
-        exec ${lib.escapeShellArg "${cfg.liveDir}/spotify"} "$@"
+        exec ${lib.escapeShellArg "${cfg.liveDir}/spotify"} ${launchFlags} "$@"
       '';
     };
   in {
@@ -61,6 +62,12 @@
         type = lib.types.package;
         default = pkgs.spotify;
         description = "Unmodified Spotify package used as the live installation source.";
+      };
+
+      launchFlags = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [];
+        description = "Extra command line flags passed to Spotify by the launcher and the desktop entry.";
       };
 
       liveDir = lib.mkOption {
