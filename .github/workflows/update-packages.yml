@@ -13,19 +13,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout un/test
+      - name: Checkout workflow ref
         uses: actions/checkout@v6
         with:
-          ref: un/test
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || 'refs/heads/un/test' }}
           fetch-depth: 0
 
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
 
+      - name: Update bun2nix lock input
+        run: |
+          nix flake lock --update-input bun2nix
+          git add flake.lock
+
       - name: Update packages
         shell: bash
         run: |
           set -euo pipefail
+
+          echo "::group::Checking Kunai release and development sources"
+          python3 .github/scripts/update-kunai.py
+          git add -N kunai-bun.nix
+          echo "::endgroup::"
 
           mapfile -t packages < <(
             nix eval --json .#packages.x86_64-linux \
@@ -33,6 +43,9 @@ jobs:
           )
 
           updated=0
+          if ! git diff --cached --quiet; then
+            updated=1
+          fi
 
           for package in "${packages[@]}"; do
             echo "::group::Checking ${package}"
@@ -40,6 +53,11 @@ jobs:
             case "${package}" in
               kunai|kunai-latest)
                 echo "Using the dedicated release/commit updater for ${package}."
+                echo "::endgroup::"
+                continue
+                ;;
+              bun2nix-cli)
+                echo "bun2nix-cli is pinned via the bun2nix flake input; skipping."
                 echo "::endgroup::"
                 continue
                 ;;
@@ -52,40 +70,42 @@ jobs:
               continue
             fi
 
+            package_file="modules/packages/${package}.nix"
+
             if nix run nixpkgs#nix-update -- \
               "${package}" \
               --flake \
               --version=stable; then
-              if git diff --quiet -- modules/packages; then
+              if git diff --quiet -- "${package_file}"; then
                 echo "${package} is up to date."
               elif nix build ".#packages.x86_64-linux.${package}" --no-link; then
-                git add modules/packages
+                git add -- "${package_file}"
                 updated=1
               else
                 echo "Updated ${package} failed to build; reverting."
-                git checkout -- modules/packages
+                git checkout -- "${package_file}"
               fi
             else
               echo "nix-update could not update ${package}; leaving it unchanged."
-              git checkout -- modules/packages
+              git checkout -- "${package_file}"
             fi
 
             echo "::endgroup::"
           done
 
-          echo "::group::Checking Kunai release and development sources"
-          python3 .github/scripts/update-kunai.py
-
-          if ! git diff --quiet -- modules/packages/kunai.nix; then
+          if ! git diff --quiet -- modules/packages/kunai.nix kunai-bun.nix; then
             if ! nix build \
               .#packages.x86_64-linux.kunai \
               .#packages.x86_64-linux.kunai-latest \
               --no-link; then
               echo "Kunai validation failed; discarding all Kunai updates."
               git checkout -- modules/packages/kunai.nix
+              git reset -- flake.lock
+              git checkout -- flake.lock
+              git checkout -- kunai-bun.nix 2>/dev/null || rm -f kunai-bun.nix
               exit 1
             fi
-            git add modules/packages/kunai.nix
+            git add modules/packages/kunai.nix kunai-bun.nix flake.lock
             updated=1
           fi
           echo "::endgroup::"
@@ -112,4 +132,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git commit -m "packages: update packages"
-          git push origin HEAD:un/test
+
+          target_branch="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            target_branch="un/test"
+          fi
+          git push origin "HEAD:${target_branch}"

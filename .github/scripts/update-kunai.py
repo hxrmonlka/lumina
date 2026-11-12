@@ -2,6 +2,8 @@
 import json
 import re
 import subprocess
+import tarfile
+import tempfile
 import urllib.request
 from pathlib import Path
 
@@ -48,31 +50,60 @@ def source_hash(revision):
     return run(["nix", "hash", "to-sri", "--type", "sha256", base32_hash])
 
 
-def workspace_hash():
-    original = PACKAGE_FILE.read_text()
-    temporary = replace_once(
-        r'outputHash = (?:lib\.fakeHash|"[^"]+");',
-        "outputHash = lib.fakeHash;",
-        original,
-        "workspace output hash",
-    )
-    try:
-        PACKAGE_FILE.write_text(temporary)
-        result = subprocess.run(
-            ["nix", "build", ".#packages.x86_64-linux.kunai-latest.passthru.workspace", "--no-link"],
-            text=True,
-            capture_output=True,
-        )
-        output = result.stdout + "\n" + result.stderr
-        match = re.search(r"got:\s*(sha256-[A-Za-z0-9+/=]+)", output)
-        if result.returncode == 0 or not match:
-            raise RuntimeError(
-                f"Unable to calculate Bun workspace hash (exit {result.returncode}):\n{output}"
-            )
-        return match.group(1)
-    finally:
-        PACKAGE_FILE.write_text(original)
+def patched_dependency_keys_from_nix(content):
+    """Keys of the patchedDependencies map in modules/packages/kunai.nix."""
+    match = re.search(r"patchedDependencies = \{(.*?)\};", content, re.S)
+    if not match:
+        return set()
+    return set(re.findall(r'"([^"]+)"\s*=', match.group(1)))
 
+
+def check_patched_dependencies(upstream_package_json, content):
+    """Fail loudly when upstream patches drift away from kunai.nix.
+
+    The bun2nix hook deletes `patchedDependencies` from package.json and
+    bun.lock before the offline install, so patched packages are replayed in
+    Nix via `fetchBunDeps.overrides`. That map is hand-maintained in
+    modules/packages/kunai.nix and must track upstream.
+    """
+    upstream = set(upstream_package_json.get("patchedDependencies", {}))
+    packaged = patched_dependency_keys_from_nix(content)
+    if upstream != packaged:
+        raise RuntimeError(
+            "Kunai patchedDependencies drifted: upstream "
+            f"{sorted(upstream)} != modules/packages/kunai.nix {sorted(packaged)}. "
+            "Update the `kunaiBunOverrides` map to match upstream package.json."
+        )
+
+
+def generate_bun_dependencies(revision):
+    url = f"https://github.com/{REPOSITORY}/archive/{revision}.tar.gz"
+    with tempfile.TemporaryDirectory(prefix="kunai-source-") as temporary:
+        archive_path = Path(temporary) / "source.tar.gz"
+        request = urllib.request.Request(url, headers={"User-Agent": "lumina-package-updater"})
+        with urllib.request.urlopen(request, timeout=60) as response:
+            archive_path.write_bytes(response.read())
+
+        source_dir = Path(temporary) / "source"
+        source_dir.mkdir()
+        with tarfile.open(archive_path, "r:gz") as archive:
+            archive.extractall(source_dir, filter="data")
+
+        roots = list(source_dir.iterdir())
+        if len(roots) != 1 or not (roots[0] / "bun.lock").is_file():
+            raise RuntimeError("Upstream source archive does not contain the expected bun.lock")
+
+        upstream_package_json = json.loads(
+            (roots[0] / "package.json").read_text(encoding="utf-8")
+        )
+        check_patched_dependencies(upstream_package_json, PACKAGE_FILE.read_text())
+
+        output = Path("kunai-bun.nix").resolve()
+        run([
+            "nix", "run", ".#bun2nix-cli", "--",
+            "--lock-file", str(roots[0] / "bun.lock"),
+            "--output-file", str(output),
+        ])
 
 def main():
     content = PACKAGE_FILE.read_text()
@@ -163,19 +194,9 @@ def main():
         re.S,
     )
     if source_match is None or source_match.group(2) == "lib.fakeHash":
-        raise RuntimeError("Latest source hash is still a placeholder; refusing workspace hash calculation")
+        raise RuntimeError("Latest source hash is still a placeholder")
 
-    workspace_match = re.search(r'outputHash = (lib\.fakeHash|"[^"]+");', content)
-    workspace_hash_missing = workspace_match is None or workspace_match.group(1) == "lib.fakeHash"
-    if old_revision != revision or old_source_version != source_version or source_hash_missing or workspace_hash_missing:
-        digest = workspace_hash()
-        content = PACKAGE_FILE.read_text()
-        content = replace_once(
-            r'outputHash = (?:lib\.fakeHash|"[^"]+");',
-            f'outputHash = "{digest}";', content, "workspace output hash"
-        )
-        PACKAGE_FILE.write_text(content)
-
+    generate_bun_dependencies(revision)
     print(f"Kunai stable: v{release_version}; development source: {revision[:12]} ({source_version})")
 
 

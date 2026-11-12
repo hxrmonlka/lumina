@@ -7,6 +7,12 @@
 
     wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
 
+    bun2nix = {
+      url = "github:nix-community/bun2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
+
     grub-theme = {
       url = "github:hxrmonlka/resources/grub";
       flake = false;
