@@ -65,22 +65,24 @@ jobs:
               continue
             fi
 
+            package_file="modules/packages/${package}.nix"
+
             if nix run nixpkgs#nix-update -- \
               "${package}" \
               --flake \
               --version=stable; then
-              if git diff --quiet -- modules/packages; then
+              if git diff --quiet -- "${package_file}"; then
                 echo "${package} is up to date."
               elif nix build ".#packages.x86_64-linux.${package}" --no-link; then
-                git add modules/packages
+                git add -- "${package_file}"
                 updated=1
               else
                 echo "Updated ${package} failed to build; reverting."
-                git checkout -- modules/packages
+                git checkout -- "${package_file}"
               fi
             else
               echo "nix-update could not update ${package}; leaving it unchanged."
-              git checkout -- modules/packages
+              git checkout -- "${package_file}"
             fi
 
             echo "::endgroup::"
