@@ -77,10 +77,14 @@ jobs:
           python3 .github/scripts/update-kunai.py
 
           if ! git diff --quiet -- modules/packages/kunai.nix; then
-            nix build \
+            if ! nix build \
               .#packages.x86_64-linux.kunai \
               .#packages.x86_64-linux.kunai-latest \
-              --no-link
+              --no-link; then
+              echo "Kunai validation failed; discarding all Kunai updates."
+              git checkout -- modules/packages/kunai.nix
+              exit 1
+            fi
             git add modules/packages/kunai.nix
             updated=1
           fi

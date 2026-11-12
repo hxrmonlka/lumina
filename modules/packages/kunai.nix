@@ -3,7 +3,7 @@
     version = "0.3.0";
     latestVersion = "0.4.0";
     stableHashes = {
-      x64 = lib.fakeHash;
+      x64 = "sha256-sbwOssjgQTjFcTAxmGt53MKPloDk3AJbWf7MdIrcE78=";
       arm64 = lib.fakeHash;
     };
     arch =
@@ -58,7 +58,7 @@
       owner = "KitsuneKode";
       repo = "kunai";
       rev = "7bf8b8af396f98e539235e32db1579f9347e5169";
-      hash = lib.fakeHash;
+      hash = "sha256-qt6DJiVbCFj4EnUTYNhvC/QIo8+/vzSFGPp/UZiIVmw=";
     };
     workspace = pkgs.stdenvNoCC.mkDerivation {
       pname = "kunai-workspace";
