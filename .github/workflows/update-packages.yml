@@ -32,6 +32,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          echo "::group::Checking Kunai release and development sources"
+          python3 .github/scripts/update-kunai.py
+          git add -N kunai-bun.nix
+          echo "::endgroup::"
+
           mapfile -t packages < <(
             nix eval --json .#packages.x86_64-linux \
               | jq -r 'keys[]'
@@ -80,10 +85,6 @@ jobs:
 
             echo "::endgroup::"
           done
-
-          echo "::group::Checking Kunai release and development sources"
-          python3 .github/scripts/update-kunai.py
-          git add -N kunai-bun.nix
 
           if ! git diff --quiet -- modules/packages/kunai.nix kunai-bun.nix; then
             if ! nix build \
