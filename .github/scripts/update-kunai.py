@@ -110,27 +110,39 @@ def main():
     PACKAGE_FILE.write_text(content)
 
     stable_block = content.split("stableHashes = {", 1)[1].split("};", 1)[0]
-    if old_release != release_version or "lib.fakeHash" in stable_block:
-        hashes = {}
-        for arch in ARCHES:
+    hashes = {}
+    for arch in ARCHES:
+        current_hash = re.search(
+            rf'(?m)^\s*{arch} = (lib\.fakeHash|"[^"]+");', stable_block
+        ).group(1)
+        if old_release != release_version or current_hash == "lib.fakeHash":
             asset = f"kunai-linux-{arch}.tar.gz"
             if asset not in assets:
                 raise RuntimeError(f"Release {tag} is missing asset {asset}")
             hashes[arch] = release_hash(
                 f"https://github.com/{REPOSITORY}/releases/download/{tag}/{asset}"
             )
-        content = PACKAGE_FILE.read_text()
-        block = (
-            "stableHashes = {\n"
-            f'      x64 = "{hashes["x64"]}";\n'
-            f'      arm64 = "{hashes["arm64"]}";\n'
-            "    };"
-        )
-        PACKAGE_FILE.write_text(replace_once(
-            r"stableHashes = \{.*?\};", block, content, "stable architecture hashes", re.S
-        ))
+        else:
+            hashes[arch] = current_hash.strip('"')
 
-    if old_revision != revision or old_source_version != source_version:
+    block = (
+        "stableHashes = {\n"
+        f'      x64 = "{hashes["x64"]}";\n'
+        f'      arm64 = "{hashes["arm64"]}";\n'
+        "    };"
+    )
+    content = PACKAGE_FILE.read_text()
+    PACKAGE_FILE.write_text(replace_once(
+        r"stableHashes = \{.*?\};", block, content, "stable architecture hashes", re.S
+    ))
+
+    source_match = re.search(
+        r'(source = pkgs\.fetchFromGitHub \{.*?\n\s*hash = )(lib\.fakeHash|"[^"]+")(;\s*\n\s*\};)',
+        PACKAGE_FILE.read_text(),
+        re.S,
+    )
+    source_hash_missing = source_match is None or source_match.group(2) == "lib.fakeHash"
+    if old_revision != revision or old_source_version != source_version or source_hash_missing:
         digest = source_hash(revision)
         content = PACKAGE_FILE.read_text()
         content = replace_once(
@@ -140,7 +152,17 @@ def main():
         PACKAGE_FILE.write_text(content)
 
     content = PACKAGE_FILE.read_text()
-    if old_revision != revision or old_source_version != source_version or "outputHash = lib.fakeHash;" in content:
+    source_match = re.search(
+        r'(source = pkgs\.fetchFromGitHub \{.*?\n\s*hash = )(lib\.fakeHash|"[^"]+")(;\s*\n\s*\};)',
+        content,
+        re.S,
+    )
+    if source_match is None or source_match.group(2) == "lib.fakeHash":
+        raise RuntimeError("Latest source hash is still a placeholder; refusing workspace hash calculation")
+
+    workspace_match = re.search(r'outputHash = (lib\.fakeHash|"[^"]+");', content)
+    workspace_hash_missing = workspace_match is None or workspace_match.group(1) == "lib.fakeHash"
+    if old_revision != revision or old_source_version != source_version or source_hash_missing or workspace_hash_missing:
         digest = workspace_hash()
         content = PACKAGE_FILE.read_text()
         content = replace_once(
