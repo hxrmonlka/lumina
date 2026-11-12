@@ -37,6 +37,14 @@ jobs:
           for package in "${packages[@]}"; do
             echo "::group::Checking ${package}"
 
+            case "${package}" in
+              kunai|kunai-latest)
+                echo "Using the dedicated release/commit updater for ${package}."
+                echo "::endgroup::"
+                continue
+                ;;
+            esac
+
             # Only attempt packages whose derivation exposes a source.
             if ! nix eval --raw ".#packages.x86_64-linux.${package}.src" >/dev/null 2>&1; then
               echo "Skipping ${package}: no source to update."
@@ -64,6 +72,19 @@ jobs:
 
             echo "::endgroup::"
           done
+
+          echo "::group::Checking Kunai release and development sources"
+          python3 .github/scripts/update-kunai.py
+
+          if ! git diff --quiet -- modules/packages/kunai.nix; then
+            nix build \
+              .#packages.x86_64-linux.kunai \
+              .#packages.x86_64-linux.kunai-latest \
+              --no-link
+            git add modules/packages/kunai.nix
+            updated=1
+          fi
+          echo "::endgroup::"
 
           if [ "${updated}" -eq 0 ]; then
             echo "No package updates found."

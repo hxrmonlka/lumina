@@ -2,6 +2,10 @@
   perSystem = {pkgs, ...}: let
     version = "0.3.0";
     latestVersion = "0.4.0";
+    stableHashes = {
+      x64 = lib.fakeHash;
+      arm64 = lib.fakeHash;
+    };
     arch =
       if pkgs.stdenv.hostPlatform.isAarch64 then "arm64"
       else if pkgs.stdenv.hostPlatform.isx86_64 then "x64"
@@ -28,7 +32,7 @@
 
       src = pkgs.fetchurl {
         url = "https://github.com/KitsuneKode/kunai/releases/download/v${version}/${target}.tar.gz";
-        hash = lib.fakeHash;
+        hash = stableHashes.${arch};
       };
 
       sourceRoot = ".";
@@ -95,6 +99,8 @@
       postFixup = ''
         wrapProgram $out/bin/kunai --prefix PATH : ${lib.makeBinPath runtimeInputs}
       '';
+
+      passthru.workspace = workspace;
 
       meta = stable.meta // {
         description = "Latest upstream source build of Kunai, a terminal-first media shell";
