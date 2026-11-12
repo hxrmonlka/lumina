@@ -13,14 +13,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout un/test
+      - name: Checkout workflow ref
         uses: actions/checkout@v6
         with:
-          ref: un/test
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || 'refs/heads/un/test' }}
           fetch-depth: 0
 
       - name: Install Nix
         uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Update bun2nix lock input
+        run: |
+          nix flake lock --update-input bun2nix
+          git add flake.lock
 
       - name: Update packages
         shell: bash
@@ -33,6 +38,9 @@ jobs:
           )
 
           updated=0
+          if ! git diff --cached --quiet; then
+            updated=1
+          fi
 
           for package in "${packages[@]}"; do
             echo "::group::Checking ${package}"
@@ -75,17 +83,21 @@ jobs:
 
           echo "::group::Checking Kunai release and development sources"
           python3 .github/scripts/update-kunai.py
+          git add -N kunai-bun.nix
 
-          if ! git diff --quiet -- modules/packages/kunai.nix; then
+          if ! git diff --quiet -- modules/packages/kunai.nix kunai-bun.nix; then
             if ! nix build \
               .#packages.x86_64-linux.kunai \
               .#packages.x86_64-linux.kunai-latest \
               --no-link; then
               echo "Kunai validation failed; discarding all Kunai updates."
               git checkout -- modules/packages/kunai.nix
+              git reset -- flake.lock
+              git checkout -- flake.lock
+              git checkout -- kunai-bun.nix 2>/dev/null || rm -f kunai-bun.nix
               exit 1
             fi
-            git add modules/packages/kunai.nix
+            git add modules/packages/kunai.nix kunai-bun.nix flake.lock
             updated=1
           fi
           echo "::endgroup::"
