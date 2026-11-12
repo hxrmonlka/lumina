@@ -1,6 +1,14 @@
-{inputs, lib, ...}: {
-  perSystem = {pkgs, system, ...}: let
-    bun2nix = inputs.bun2nix.packages.${system}.bun2nix;
+{
+  inputs,
+  lib,
+  ...
+}: {
+  perSystem = {
+    pkgs,
+    system,
+    ...
+  }: let
+    bun2nix = inputs.bun2nix.packages.${system}.default;
     version = "0.3.0";
     latestVersion = "0.4.0";
     stableHashes = {
@@ -8,8 +16,10 @@
       arm64 = lib.fakeHash;
     };
     arch =
-      if pkgs.stdenv.hostPlatform.isAarch64 then "arm64"
-      else if pkgs.stdenv.hostPlatform.isx86_64 then "x64"
+      if pkgs.stdenv.hostPlatform.isAarch64
+      then "arm64"
+      else if pkgs.stdenv.hostPlatform.isx86_64
+      then "x64"
       else throw "Kunai is only packaged for x86_64-linux and aarch64-linux";
     target = "kunai-linux-${arch}";
     runtimeInputs = with pkgs; [
@@ -71,9 +81,9 @@
 
       bunNix = pkgs.writeText "kunai-bun.nix" (
         builtins.replaceStrings
-          [ "copyPathToStore ./" ]
-          [ "copyPathToStore ${source}/" ]
-          (builtins.readFile ../../kunai-bun.nix)
+        ["copyPathToStore ./"]
+        ["copyPathToStore ${source}/"]
+        (builtins.readFile ../../kunai-bun.nix)
       );
       bunDeps = bun2nix.fetchBunDeps {
         inherit bunNix;
@@ -99,11 +109,14 @@
         wrapProgram $out/bin/kunai --prefix PATH : ${lib.makeBinPath runtimeInputs}
       '';
 
-      meta = stable.meta // {
-        description = "Latest upstream source build of Kunai, a terminal-first media shell";
-      };
+      meta =
+        stable.meta
+        // {
+          description = "Latest upstream source build of Kunai, a terminal-first media shell";
+        };
     };
   in {
+    packages.bun2nix-cli = bun2nix;
     packages.kunai = stable;
     packages.kunai-latest = latest;
   };

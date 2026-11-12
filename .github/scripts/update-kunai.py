@@ -69,7 +69,7 @@ def generate_bun_dependencies(revision):
 
         output = Path("kunai-bun.nix").resolve()
         run([
-            "nix", "run", ".#bun2nix", "--",
+            "nix", "run", ".#bun2nix-cli", "--",
             "--lock-file", str(roots[0] / "bun.lock"),
             "--output-file", str(output),
         ])

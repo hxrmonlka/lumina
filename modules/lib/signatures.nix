@@ -16,7 +16,8 @@
     assertions = [
       {
         assertion =
-          (osConfig.networking.hostName or "unknown") == allowedHost
+          (osConfig.networking.hostName or "unknown")
+          == allowedHost
           && (config.home.username or "unknown") == allowedUser;
         message = "lumina/signature: expected '${allowedUser}@${allowedHost}', got '${config.home.username or "unknown"}@${osConfig.networking.hostName or "unknown"}'.";
       }
