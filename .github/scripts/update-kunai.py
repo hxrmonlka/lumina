@@ -50,6 +50,32 @@ def source_hash(revision):
     return run(["nix", "hash", "to-sri", "--type", "sha256", base32_hash])
 
 
+def patched_dependency_keys_from_nix(content):
+    """Keys of the patchedDependencies map in modules/packages/kunai.nix."""
+    match = re.search(r"patchedDependencies = \{(.*?)\};", content, re.S)
+    if not match:
+        return set()
+    return set(re.findall(r'"([^"]+)"\s*=', match.group(1)))
+
+
+def check_patched_dependencies(upstream_package_json, content):
+    """Fail loudly when upstream patches drift away from kunai.nix.
+
+    The bun2nix hook deletes `patchedDependencies` from package.json and
+    bun.lock before the offline install, so patched packages are replayed in
+    Nix via `fetchBunDeps.overrides`. That map is hand-maintained in
+    modules/packages/kunai.nix and must track upstream.
+    """
+    upstream = set(upstream_package_json.get("patchedDependencies", {}))
+    packaged = patched_dependency_keys_from_nix(content)
+    if upstream != packaged:
+        raise RuntimeError(
+            "Kunai patchedDependencies drifted: upstream "
+            f"{sorted(upstream)} != modules/packages/kunai.nix {sorted(packaged)}. "
+            "Update the `kunaiBunOverrides` map to match upstream package.json."
+        )
+
+
 def generate_bun_dependencies(revision):
     url = f"https://github.com/{REPOSITORY}/archive/{revision}.tar.gz"
     with tempfile.TemporaryDirectory(prefix="kunai-source-") as temporary:
@@ -66,6 +92,11 @@ def generate_bun_dependencies(revision):
         roots = list(source_dir.iterdir())
         if len(roots) != 1 or not (roots[0] / "bun.lock").is_file():
             raise RuntimeError("Upstream source archive does not contain the expected bun.lock")
+
+        upstream_package_json = json.loads(
+            (roots[0] / "package.json").read_text(encoding="utf-8")
+        )
+        check_patched_dependencies(upstream_package_json, PACKAGE_FILE.read_text())
 
         output = Path("kunai-bun.nix").resolve()
         run([

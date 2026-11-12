@@ -56,6 +56,11 @@ jobs:
                 echo "::endgroup::"
                 continue
                 ;;
+              bun2nix-cli)
+                echo "bun2nix-cli is pinned via the bun2nix flake input; skipping."
+                echo "::endgroup::"
+                continue
+                ;;
             esac
 
             # Only attempt packages whose derivation exposes a source.
