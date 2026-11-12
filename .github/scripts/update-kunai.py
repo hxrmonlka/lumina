@@ -49,26 +49,29 @@ def source_hash(revision):
 
 
 def workspace_hash():
-    content = PACKAGE_FILE.read_text()
-    content = replace_once(
-        r'outputHash = (?:lib\.fakeHash|"[^"]+");',
+    original = PACKAGE_FILE.read_text()
+    temporary = replace_once(
+        r'outputHash = (?:lib\\.fakeHash|"[^"]+");',
         "outputHash = lib.fakeHash;",
-        content,
+        original,
         "workspace output hash",
     )
-    PACKAGE_FILE.write_text(content)
-    result = subprocess.run(
-        ["nix", "build", ".#packages.x86_64-linux.kunai-latest.passthru.workspace", "--no-link"],
-        text=True,
-        capture_output=True,
-    )
-    output = result.stdout + "\n" + result.stderr
-    match = re.search(r"got:\s*(sha256-[A-Za-z0-9+/=]+)", output)
-    if not match:
-        raise RuntimeError(f"Unable to calculate Bun workspace hash (exit {result.returncode}):\n{output}")
-    return match.group(1)
-
-
+    try:
+        PACKAGE_FILE.write_text(temporary)
+        result = subprocess.run(
+            ["nix", "build", ".#packages.x86_64-linux.kunai-latest.passthru.workspace", "--no-link"],
+            text=True,
+            capture_output=True,
+        )
+        output = result.stdout + "\\n" + result.stderr
+        match = re.search(r"got:\\s*(sha256-[A-Za-z0-9+/=]+)", output)
+        if result.returncode == 0 or not match:
+            raise RuntimeError(
+                f"Unable to calculate Bun workspace hash (exit {result.returncode}):\\n{output}"
+            )
+        return match.group(1)
+    finally:
+        PACKAGE_FILE.write_text(original)
 def main():
     content = PACKAGE_FILE.read_text()
     release = github_json(f"{API}/releases/latest")
@@ -113,7 +116,7 @@ def main():
     hashes = {}
     for arch in ARCHES:
         current_hash = re.search(
-            rf'(?m)^\s*{arch} = (lib\.fakeHash|"[^"]+");', stable_block
+            rf'(?m)^\\s*{arch} = (lib\\.fakeHash|"[^"]+");', stable_block
         ).group(1)
         if old_release != release_version or current_hash == "lib.fakeHash":
             asset = f"kunai-linux-{arch}.tar.gz"
@@ -126,18 +129,18 @@ def main():
             hashes[arch] = current_hash.strip('"')
 
     block = (
-        "stableHashes = {\n"
-        f'      x64 = "{hashes["x64"]}";\n'
-        f'      arm64 = "{hashes["arm64"]}";\n'
+        "stableHashes = {\\n"
+        f'      x64 = "{hashes["x64"]}";\\n'
+        f'      arm64 = "{hashes["arm64"]}";\\n'
         "    };"
     )
     content = PACKAGE_FILE.read_text()
     PACKAGE_FILE.write_text(replace_once(
-        r"stableHashes = \{.*?\};", block, content, "stable architecture hashes", re.S
+        r"stableHashes = \\{.*?\\};", block, content, "stable architecture hashes", re.S
     ))
 
     source_match = re.search(
-        r'(source = pkgs\.fetchFromGitHub \{.*?\n\s*hash = )(lib\.fakeHash|"[^"]+")(;\s*\n\s*\};)',
+        r'(source = pkgs\\.fetchFromGitHub \\{.*?\\n\\s*hash = )(lib\\.fakeHash|"[^"]+")(;\\s*\\n\\s*\\};)',
         PACKAGE_FILE.read_text(),
         re.S,
     )
@@ -146,27 +149,27 @@ def main():
         digest = source_hash(revision)
         content = PACKAGE_FILE.read_text()
         content = replace_once(
-            r'(source = pkgs\.fetchFromGitHub \{.*?\n\s*hash = )(?:lib\.fakeHash|"[^"]+")(;\s*\n\s*\};)',
-            rf'\g<1>"{digest}"\g<2>', content, "latest source hash", re.S
+            r'(source = pkgs\\.fetchFromGitHub \\{.*?\\n\\s*hash = )(?:lib\\.fakeHash|"[^"]+")(;\\s*\\n\\s*\\};)',
+            rf'\\g<1>"{digest}"\\g<2>', content, "latest source hash", re.S
         )
         PACKAGE_FILE.write_text(content)
 
     content = PACKAGE_FILE.read_text()
     source_match = re.search(
-        r'(source = pkgs\.fetchFromGitHub \{.*?\n\s*hash = )(lib\.fakeHash|"[^"]+")(;\s*\n\s*\};)',
+        r'(source = pkgs\\.fetchFromGitHub \\{.*?\\n\\s*hash = )(lib\\.fakeHash|"[^"]+")(;\\s*\\n\\s*\\};)',
         content,
         re.S,
     )
     if source_match is None or source_match.group(2) == "lib.fakeHash":
         raise RuntimeError("Latest source hash is still a placeholder; refusing workspace hash calculation")
 
-    workspace_match = re.search(r'outputHash = (lib\.fakeHash|"[^"]+");', content)
+    workspace_match = re.search(r'outputHash = (lib\\.fakeHash|"[^"]+");', content)
     workspace_hash_missing = workspace_match is None or workspace_match.group(1) == "lib.fakeHash"
     if old_revision != revision or old_source_version != source_version or source_hash_missing or workspace_hash_missing:
         digest = workspace_hash()
         content = PACKAGE_FILE.read_text()
         content = replace_once(
-            r'outputHash = (?:lib\.fakeHash|"[^"]+");',
+            r'outputHash = (?:lib\\.fakeHash|"[^"]+");',
             f'outputHash = "{digest}";', content, "workspace output hash"
         )
         PACKAGE_FILE.write_text(content)
