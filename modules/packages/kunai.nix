@@ -1,5 +1,6 @@
-{lib, ...}: {
-  perSystem = {pkgs, ...}: let
+{inputs, lib, ...}: {
+  perSystem = {pkgs, system, ...}: let
+    bun2nix = inputs.bun2nix.packages.${system}.bun2nix;
     version = "0.3.0";
     latestVersion = "0.4.0";
     stableHashes = {
@@ -60,33 +61,31 @@
       rev = "7bf8b8af396f98e539235e32db1579f9347e5169";
       hash = "sha256-qt6DJiVbCFj4EnUTYNhvC/QIo8+/vzSFGPp/UZiIVmw=";
     };
-    workspace = pkgs.stdenvNoCC.mkDerivation {
-      pname = "kunai-workspace";
-      src = source;
-      version = latestVersion;
-
-      nativeBuildInputs = [pkgs.bun];
-      outputHashMode = "recursive";
-      outputHashAlgo = "sha256";
-      outputHash = lib.fakeHash;
-
-      buildPhase = ''
-        export HOME="$TMPDIR"
-        bun install --filter @kitsunekode/kunai --frozen-lockfile --ignore-scripts
-      '';
-
-      installPhase = ''
-        mkdir -p $out
-        cp -a . $out/
-      '';
-    };
     latest = pkgs.stdenvNoCC.mkDerivation {
       pname = "kunai";
       version = latestVersion;
-      src = workspace;
+      src = source;
 
-      nativeBuildInputs = [pkgs.bun] ++ nativeBuildInputs;
+      nativeBuildInputs = [pkgs.bun bun2nix.hook] ++ nativeBuildInputs;
       inherit buildInputs;
+
+      bunNix = pkgs.writeText "kunai-bun.nix" (
+        builtins.replaceStrings
+          [ "copyPathToStore ./" ]
+          [ "copyPathToStore ${source}/" ]
+          (builtins.readFile ../../kunai-bun.nix)
+      );
+      bunDeps = bun2nix.fetchBunDeps {
+        inherit bunNix;
+      };
+      bunInstallFlagsArray = [
+        "--filter"
+        "@kitsunekode/kunai"
+        "--frozen-lockfile"
+      ];
+      dontRunLifecycleScripts = true;
+      dontUseBunBuild = true;
+      dontUseBunCheck = true;
 
       buildPhase = ''
         bun run --cwd apps/cli build:binary:host --skip-typecheck
@@ -99,8 +98,6 @@
       postFixup = ''
         wrapProgram $out/bin/kunai --prefix PATH : ${lib.makeBinPath runtimeInputs}
       '';
-
-      passthru.workspace = workspace;
 
       meta = stable.meta // {
         description = "Latest upstream source build of Kunai, a terminal-first media shell";
