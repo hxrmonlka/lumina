@@ -127,4 +127,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git commit -m "packages: update packages"
-          git push origin HEAD:un/test
+
+          target_branch="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            target_branch="un/test"
+          fi
+          git push origin "HEAD:${target_branch}"
