@@ -71,6 +71,14 @@
       rev = "7bf8b8af396f98e539235e32db1579f9347e5169";
       hash = "sha256-qt6DJiVbCFj4EnUTYNhvC/QIo8+/vzSFGPp/UZiIVmw=";
     };
+
+    bunNix = pkgs.writeText "kunai-bun.nix" (
+      builtins.replaceStrings
+      ["copyPathToStore ./"]
+      ["copyPathToStore ${source}/"]
+      (builtins.readFile ../../kunai-bun.nix)
+    );
+
     latest = pkgs.stdenvNoCC.mkDerivation {
       pname = "kunai";
       version = latestVersion;
@@ -79,12 +87,6 @@
       nativeBuildInputs = [pkgs.bun bun2nix.hook] ++ nativeBuildInputs;
       inherit buildInputs;
 
-      bunNix = pkgs.writeText "kunai-bun.nix" (
-        builtins.replaceStrings
-        ["copyPathToStore ./"]
-        ["copyPathToStore ${source}/"]
-        (builtins.readFile ../../kunai-bun.nix)
-      );
       bunDeps = bun2nix.fetchBunDeps {
         inherit bunNix;
       };
