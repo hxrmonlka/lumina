@@ -47,14 +47,6 @@
       # StatusNotifierItem tray implementation, so they are not provided here.
       extraPkgs = pkgs: [sharpLibvips];
 
-      # Expose NixOS's hardware graphics driver trees (GLX/EGL/Vulkan ICDs,
-      # VAAPI/VDPAU) inside the sandbox like Steam's FHS environment does.
-      # ro-bind-try makes this a no-op on systems without them.
-      extraBwrapArgs = [
-        "--ro-bind-try /run/opengl-driver /run/opengl-driver"
-        "--ro-bind-try /run/opengl-driver-32 /run/opengl-driver-32"
-      ];
-
       extraInstallCommands = ''
         install -Dm444 ${appimageContents}/zcode.desktop \
           $out/share/applications/zcode.desktop
