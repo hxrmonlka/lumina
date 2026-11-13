@@ -5,7 +5,7 @@
 }: {
   perSystem = {system, ...}: let
     pname = "endcord";
-    version = "1.5.4";
+    version = "1.6.0";
 
     pkgs = import inputs.nixpkgs {
       inherit system;
@@ -45,7 +45,7 @@
         owner = "sparklost";
         repo = "endcord";
         tag = version;
-        hash = "sha256-ccpTm573Nhxj2AKvqSunE2ZZAemgox9hDakUSwvaw3s=";
+        hash = "sha256-Ilqcr5IumhWaEgAWwUQTyPPnrqFaId5tePWaLrQEDFM=";
       };
 
       nativeBuildInputs = [buildEnv];

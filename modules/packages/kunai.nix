@@ -13,7 +13,7 @@
     latestVersion = "0.4.0";
     stableHashes = {
       x64 = "sha256-sbwOssjgQTjFcTAxmGt53MKPloDk3AJbWf7MdIrcE78=";
-      arm64 = lib.fakeHash;
+      arm64 = "sha256-IVHt5LPI+aFCSb1RgthSvw0d2w9SBeSNSzwK1RHJzzE=";
     };
     arch =
       if pkgs.stdenv.hostPlatform.isAarch64
@@ -70,8 +70,8 @@
     source = pkgs.fetchFromGitHub {
       owner = "KitsuneKode";
       repo = "kunai";
-      rev = "7bf8b8af396f98e539235e32db1579f9347e5169";
-      hash = "sha256-qt6DJiVbCFj4EnUTYNhvC/QIo8+/vzSFGPp/UZiIVmw=";
+      rev = "5f088355b5cf4ecd9d68cb50b9e5e5f1eadd2e3d";
+      hash = "sha256-OCRiNq8w8wSHBMvhNeZdei12aP+quNJuKrf/WkQoENE=";
     };
 
     # Dependency set for `kunai-latest`, generated from the pinned Kunai
