@@ -70,8 +70,8 @@
     source = pkgs.fetchFromGitHub {
       owner = "KitsuneKode";
       repo = "kunai";
-      rev = "5f088355b5cf4ecd9d68cb50b9e5e5f1eadd2e3d";
-      hash = "sha256-OCRiNq8w8wSHBMvhNeZdei12aP+quNJuKrf/WkQoENE=";
+      rev = "1fdcc71e51e90131a21daf25192b1e992f7b7dc2";
+      hash = "sha256-S/HA+sVuYXoR4NUQyNt0dhMFIuTeoKuywMyLCOhv50U=";
     };
 
     # Dependency set for `kunai-latest`, generated from the pinned Kunai
