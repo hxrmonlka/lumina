@@ -37,6 +37,19 @@ jobs:
           git add -N kunai-bun.nix
           echo "::endgroup::"
 
+          echo "::group::Checking CodeRabbit CLI release"
+          python3 .github/scripts/update-coderabbit-cli.py
+          if ! git diff --quiet -- modules/packages/coderabbit-cli.nix; then
+            if nix build .#packages.x86_64-linux.coderabbit-cli --no-link; then
+              git add -- modules/packages/coderabbit-cli.nix
+              updated=1
+            else
+              echo "CodeRabbit CLI update failed to build; reverting."
+              git checkout -- modules/packages/coderabbit-cli.nix
+            fi
+          fi
+          echo "::endgroup::"
+
           mapfile -t packages < <(
             nix eval --json .#packages.x86_64-linux \
               | jq -r 'keys[]'
@@ -53,6 +66,11 @@ jobs:
             case "${package}" in
               kunai|kunai-latest)
                 echo "Using the dedicated release/commit updater for ${package}."
+                echo "::endgroup::"
+                continue
+                ;;
+              coderabbit-cli)
+                echo "Using the dedicated VERSION-endpoint updater for ${package}."
                 echo "::endgroup::"
                 continue
                 ;;
