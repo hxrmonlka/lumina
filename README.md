@@ -47,41 +47,16 @@ lumina sync settings/noctalia
 lumina sync settings/noctalia-kdl
 ```
 Some targets work only on specific hosts. On any other host, the command stops with an error since... you know, like I said.
-To tell Lumina where the local Alice copy is, set `ALICE_DOTFILES` or pass the path:
+
+To tell Lumina where the local Alice copy is, you may pass the project path with `--loc`:
 ```sh
 lumina sync --loc /path/to/alice
 ```
 
-Alice options:
+You can *also* set the `ALICE_DOTFILES` environment variable declaratively with this:
 ```nix
-programs.lumina-cli.enable = true;
-programs.lumina-cli.configPath = "/path/to/alice";
+programs.lumina-cli.configPath = "path/to/alice";
 ```
-### Obsidian theming
-`app/obsidian-matugen` brings Material You colors to Obsidian. Lumina installs
-the bundled [matugen](https://github.com/InioX/matugen) template and manages
-the CSS snippet inside each vault; matugen renders the actual colors.
-```sh
-lumina sync app/obsidian-matugen --vault /path/to/vault
-lumina sync app/obsidian-matugen --vault ~/vaults/notes --vault ~/vaults/work
-lumina sync app/obsidian-matugen --vault /path/to/vault --enable
-```
-- `--vault` is repeatable, one run per vault. On the matugen side, each vault needs its own template entry (matugen 4.2's array `output_path` only renders its last element, so don't rely on it).
-- `--enable` adds `obsidian-material3` to the vault's enabled snippets in `.obsidian/appearance.json`. Run it while Obsidian is closed.
-- `--force` overwrites the vault snippet even after matugen has rendered it.
-
-The command does not need `--loc` or `ALICE_DOTFILES`; a vault is not an
-Alice-relative destination. It installs the template into
-`$XDG_CONFIG_HOME/matugen/templates/obsidian-material3.css`, creates
-`<vault>/.obsidian/snippets/`, and seeds the snippet with the bundled template.
-Matugen then renders over that file on every `matugen image <wallpaper>` run,
-and Lumina never overwrites a rendered snippet unless `--force` is passed.
-Obsidian picks up snippet changes automatically while it runs; enable it once
-under Settings → Appearance → CSS snippets (or use `--enable`).
-
-The first sync prints the `[templates.Obsidian]` entry that matugen needs.
-Since Alice manages `~/.config/matugen/config.toml` through home-manager, add
-that entry to `modules/home/alice/programs/matugen.nix` in Alice.
 ### Branches
 Relatively similar to how Alice's branches work, but there is no ground for collaboration, *yet*.
 `un/test` does a squash & merge to `main` whenever I feel like it.
