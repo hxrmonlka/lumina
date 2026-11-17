@@ -38,7 +38,7 @@ pub fn resolve(flag: Option<String>) -> Result<PathBuf> {
     Ok(dir)
 }
 
-fn expand_home(raw: &str) -> PathBuf {
+pub(crate) fn expand_home(raw: &str) -> PathBuf {
     let rest = match raw {
         "~" => Some(""),
         _ => raw.strip_prefix("~/"),

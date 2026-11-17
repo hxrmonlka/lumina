@@ -1,0 +1,322 @@
+/*
+ * obsidian-material3.css
+ *
+ * Material Design 3 (Material You) colors for Obsidian, rendered by matugen.
+ * Managed by Lumina. Install or update it with:
+ *
+ *     lumina sync app/obsidian-matugen --vault /path/to/vault
+ *
+ * This file is a matugen template: the colors placeholders (colors.<token>.
+ * <scheme>.<format>) are replaced every time `matugen image <wallpaper>` runs,
+ * so the snippet follows the wallpaper. Obsidian reloads snippet files
+ * automatically while it runs.
+ *
+ * Enable the snippet once in Obsidian under Settings -> Appearance -> CSS
+ * snippets, or sync with `--enable` to let Lumina toggle it for you.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Material Design 3 tokens                                            */
+/* ------------------------------------------------------------------ */
+
+.theme-dark {
+  --md-sys-color-primary: {{colors.primary.dark.hex}};
+  --md-sys-color-on-primary: {{colors.on_primary.dark.hex}};
+  --md-sys-color-primary-container: {{colors.primary_container.dark.hex}};
+  --md-sys-color-on-primary-container: {{colors.on_primary_container.dark.hex}};
+  --md-sys-color-primary-fixed: {{colors.primary_fixed.dark.hex}};
+  --md-sys-color-primary-fixed-dim: {{colors.primary_fixed_dim.dark.hex}};
+  --md-sys-color-on-primary-fixed: {{colors.on_primary_fixed.dark.hex}};
+  --md-sys-color-on-primary-fixed-variant: {{colors.on_primary_fixed_variant.dark.hex}};
+  --md-sys-color-secondary: {{colors.secondary.dark.hex}};
+  --md-sys-color-on-secondary: {{colors.on_secondary.dark.hex}};
+  --md-sys-color-secondary-container: {{colors.secondary_container.dark.hex}};
+  --md-sys-color-on-secondary-container: {{colors.on_secondary_container.dark.hex}};
+  --md-sys-color-secondary-fixed: {{colors.secondary_fixed.dark.hex}};
+  --md-sys-color-secondary-fixed-dim: {{colors.secondary_fixed_dim.dark.hex}};
+  --md-sys-color-on-secondary-fixed: {{colors.on_secondary_fixed.dark.hex}};
+  --md-sys-color-on-secondary-fixed-variant: {{colors.on_secondary_fixed_variant.dark.hex}};
+  --md-sys-color-tertiary: {{colors.tertiary.dark.hex}};
+  --md-sys-color-on-tertiary: {{colors.on_tertiary.dark.hex}};
+  --md-sys-color-tertiary-container: {{colors.tertiary_container.dark.hex}};
+  --md-sys-color-on-tertiary-container: {{colors.on_tertiary_container.dark.hex}};
+  --md-sys-color-tertiary-fixed: {{colors.tertiary_fixed.dark.hex}};
+  --md-sys-color-tertiary-fixed-dim: {{colors.tertiary_fixed_dim.dark.hex}};
+  --md-sys-color-on-tertiary-fixed: {{colors.on_tertiary_fixed.dark.hex}};
+  --md-sys-color-on-tertiary-fixed-variant: {{colors.on_tertiary_fixed_variant.dark.hex}};
+  --md-sys-color-error: {{colors.error.dark.hex}};
+  --md-sys-color-on-error: {{colors.on_error.dark.hex}};
+  --md-sys-color-error-container: {{colors.error_container.dark.hex}};
+  --md-sys-color-on-error-container: {{colors.on_error_container.dark.hex}};
+  --md-sys-color-background: {{colors.background.dark.hex}};
+  --md-sys-color-on-background: {{colors.on_background.dark.hex}};
+  --md-sys-color-surface: {{colors.surface.dark.hex}};
+  --md-sys-color-on-surface: {{colors.on_surface.dark.hex}};
+  --md-sys-color-surface-variant: {{colors.surface_variant.dark.hex}};
+  --md-sys-color-on-surface-variant: {{colors.on_surface_variant.dark.hex}};
+  --md-sys-color-surface-dim: {{colors.surface_dim.dark.hex}};
+  --md-sys-color-surface-bright: {{colors.surface_bright.dark.hex}};
+  --md-sys-color-surface-container-lowest: {{colors.surface_container_lowest.dark.hex}};
+  --md-sys-color-surface-container-low: {{colors.surface_container_low.dark.hex}};
+  --md-sys-color-surface-container: {{colors.surface_container.dark.hex}};
+  --md-sys-color-surface-container-high: {{colors.surface_container_high.dark.hex}};
+  --md-sys-color-surface-container-highest: {{colors.surface_container_highest.dark.hex}};
+  --md-sys-color-surface-tint: {{colors.surface_tint.dark.hex}};
+  --md-sys-color-outline: {{colors.outline.dark.hex}};
+  --md-sys-color-outline-variant: {{colors.outline_variant.dark.hex}};
+  --md-sys-color-inverse-surface: {{colors.inverse_surface.dark.hex}};
+  --md-sys-color-inverse-on-surface: {{colors.inverse_on_surface.dark.hex}};
+  --md-sys-color-inverse-primary: {{colors.inverse_primary.dark.hex}};
+  --md-sys-color-shadow: {{colors.shadow.dark.hex}};
+  --md-sys-color-scrim: {{colors.scrim.dark.hex}};
+}
+
+.theme-light {
+  --md-sys-color-primary: {{colors.primary.light.hex}};
+  --md-sys-color-on-primary: {{colors.on_primary.light.hex}};
+  --md-sys-color-primary-container: {{colors.primary_container.light.hex}};
+  --md-sys-color-on-primary-container: {{colors.on_primary_container.light.hex}};
+  --md-sys-color-primary-fixed: {{colors.primary_fixed.light.hex}};
+  --md-sys-color-primary-fixed-dim: {{colors.primary_fixed_dim.light.hex}};
+  --md-sys-color-on-primary-fixed: {{colors.on_primary_fixed.light.hex}};
+  --md-sys-color-on-primary-fixed-variant: {{colors.on_primary_fixed_variant.light.hex}};
+  --md-sys-color-secondary: {{colors.secondary.light.hex}};
+  --md-sys-color-on-secondary: {{colors.on_secondary.light.hex}};
+  --md-sys-color-secondary-container: {{colors.secondary_container.light.hex}};
+  --md-sys-color-on-secondary-container: {{colors.on_secondary_container.light.hex}};
+  --md-sys-color-secondary-fixed: {{colors.secondary_fixed.light.hex}};
+  --md-sys-color-secondary-fixed-dim: {{colors.secondary_fixed_dim.light.hex}};
+  --md-sys-color-on-secondary-fixed: {{colors.on_secondary_fixed.light.hex}};
+  --md-sys-color-on-secondary-fixed-variant: {{colors.on_secondary_fixed_variant.light.hex}};
+  --md-sys-color-tertiary: {{colors.tertiary.light.hex}};
+  --md-sys-color-on-tertiary: {{colors.on_tertiary.light.hex}};
+  --md-sys-color-tertiary-container: {{colors.tertiary_container.light.hex}};
+  --md-sys-color-on-tertiary-container: {{colors.on_tertiary_container.light.hex}};
+  --md-sys-color-tertiary-fixed: {{colors.tertiary_fixed.light.hex}};
+  --md-sys-color-tertiary-fixed-dim: {{colors.tertiary_fixed_dim.light.hex}};
+  --md-sys-color-on-tertiary-fixed: {{colors.on_tertiary_fixed.light.hex}};
+  --md-sys-color-on-tertiary-fixed-variant: {{colors.on_tertiary_fixed_variant.light.hex}};
+  --md-sys-color-error: {{colors.error.light.hex}};
+  --md-sys-color-on-error: {{colors.on_error.light.hex}};
+  --md-sys-color-error-container: {{colors.error_container.light.hex}};
+  --md-sys-color-on-error-container: {{colors.on_error_container.light.hex}};
+  --md-sys-color-background: {{colors.background.light.hex}};
+  --md-sys-color-on-background: {{colors.on_background.light.hex}};
+  --md-sys-color-surface: {{colors.surface.light.hex}};
+  --md-sys-color-on-surface: {{colors.on_surface.light.hex}};
+  --md-sys-color-surface-variant: {{colors.surface_variant.light.hex}};
+  --md-sys-color-on-surface-variant: {{colors.on_surface_variant.light.hex}};
+  --md-sys-color-surface-dim: {{colors.surface_dim.light.hex}};
+  --md-sys-color-surface-bright: {{colors.surface_bright.light.hex}};
+  --md-sys-color-surface-container-lowest: {{colors.surface_container_lowest.light.hex}};
+  --md-sys-color-surface-container-low: {{colors.surface_container_low.light.hex}};
+  --md-sys-color-surface-container: {{colors.surface_container.light.hex}};
+  --md-sys-color-surface-container-high: {{colors.surface_container_high.light.hex}};
+  --md-sys-color-surface-container-highest: {{colors.surface_container_highest.light.hex}};
+  --md-sys-color-surface-tint: {{colors.surface_tint.light.hex}};
+  --md-sys-color-outline: {{colors.outline.light.hex}};
+  --md-sys-color-outline-variant: {{colors.outline_variant.light.hex}};
+  --md-sys-color-inverse-surface: {{colors.inverse_surface.light.hex}};
+  --md-sys-color-inverse-on-surface: {{colors.inverse_on_surface.light.hex}};
+  --md-sys-color-inverse-primary: {{colors.inverse_primary.light.hex}};
+  --md-sys-color-shadow: {{colors.shadow.light.hex}};
+  --md-sys-color-scrim: {{colors.scrim.light.hex}};
+}
+
+/* ------------------------------------------------------------------ */
+/* Obsidian variables                                                  */
+/* ------------------------------------------------------------------ */
+
+.theme-dark {
+  --background-primary: var(--md-sys-color-surface-container-low);
+  --background-primary-alt: var(--md-sys-color-surface-container);
+  --background-secondary: var(--md-sys-color-surface-container-lowest);
+  --background-secondary-alt: var(--md-sys-color-surface-dim);
+  --background-modifier-border: var(--md-sys-color-outline-variant);
+  --background-modifier-border-hover: var(--md-sys-color-outline);
+  --background-modifier-border-focus: var(--md-sys-color-outline);
+  --background-modifier-hover: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  --background-modifier-active-hover: color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
+  --background-modifier-box-shadow: var(--md-sys-color-shadow);
+  --background-modifier-cover: color-mix(in srgb, var(--md-sys-color-scrim) 60%, transparent);
+  --background-modifier-error: var(--md-sys-color-error-container);
+  --background-modifier-error-hover: color-mix(in srgb, var(--md-sys-color-error) 25%, transparent);
+  --background-modifier-success: var(--md-sys-color-tertiary-container);
+  --background-modifier-form-field: var(--md-sys-color-surface-container-lowest);
+  --text-normal: var(--md-sys-color-on-surface);
+  --text-muted: var(--md-sys-color-on-surface-variant);
+  --text-faint: var(--md-sys-color-outline);
+  --text-on-accent: var(--md-sys-color-on-primary);
+  --text-accent: var(--md-sys-color-primary);
+  --text-accent-hover: var(--md-sys-color-primary-fixed-dim);
+  --text-error: var(--md-sys-color-error);
+  --text-success: var(--md-sys-color-tertiary);
+  --text-selection: color-mix(in srgb, var(--md-sys-color-primary) 32%, transparent);
+  --text-highlight-bg: color-mix(in srgb, var(--md-sys-color-tertiary) 30%, transparent);
+  --interactive-normal: var(--md-sys-color-surface-container-high);
+  --interactive-hover: var(--md-sys-color-surface-container-highest);
+  --interactive-accent: var(--md-sys-color-primary);
+  --interactive-accent-hover: color-mix(in srgb, var(--md-sys-color-primary) 84%, var(--md-sys-color-on-primary));
+  --interactive-error: var(--md-sys-color-error);
+  --titlebar-background: var(--md-sys-color-surface-container-lowest);
+  --titlebar-background-focused: var(--md-sys-color-surface-container-low);
+  --tab-outline-color: var(--md-sys-color-outline-variant);
+  --tab-background-active: var(--md-sys-color-surface-container-high);
+  --divider-color: var(--md-sys-color-outline-variant);
+  --code-background: var(--md-sys-color-surface-container);
+  --code-normal: var(--md-sys-color-on-surface);
+  --menu-background: var(--md-sys-color-surface-container);
+  --menu-border-color: var(--md-sys-color-outline-variant);
+  --modal-background: var(--md-sys-color-surface-container-high);
+  --modal-border-color: var(--md-sys-color-outline-variant);
+  --tooltip-background: var(--md-sys-color-inverse-surface);
+  --tooltip-text-color: var(--md-sys-color-inverse-on-surface);
+  --checkbox-color: var(--md-sys-color-primary);
+  --checkbox-color-hover: var(--md-sys-color-primary-fixed-dim);
+  --checkbox-border-color: var(--md-sys-color-outline);
+  --checkbox-border-color-hover: var(--md-sys-color-on-surface-variant);
+  --scrollbar-bg: transparent;
+  --scrollbar-thumb-bg: color-mix(in srgb, var(--md-sys-color-outline-variant) 55%, transparent);
+  --scrollbar-active-thumb-bg: var(--md-sys-color-outline);
+  --status-bar-background: var(--md-sys-color-surface-container-lowest);
+  --status-bar-text-color: var(--md-sys-color-on-surface-variant);
+  --ribbon-background: var(--md-sys-color-surface-container-lowest);
+  --nav-item-background-active: var(--md-sys-color-surface-container-high);
+  --nav-item-color-active: var(--md-sys-color-on-surface);
+  --icon-color: var(--md-sys-color-on-surface-variant);
+  --link-color: var(--md-sys-color-primary);
+  --link-color-hover: var(--md-sys-color-primary-fixed-dim);
+  --link-unresolved-color: var(--md-sys-color-on-surface-variant);
+}
+
+.theme-light {
+  --background-primary: var(--md-sys-color-surface-container-lowest);
+  --background-primary-alt: var(--md-sys-color-surface-container-low);
+  --background-secondary: var(--md-sys-color-surface-container-low);
+  --background-secondary-alt: var(--md-sys-color-surface-container);
+  --background-modifier-border: var(--md-sys-color-outline-variant);
+  --background-modifier-border-hover: var(--md-sys-color-outline);
+  --background-modifier-border-focus: var(--md-sys-color-outline);
+  --background-modifier-hover: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  --background-modifier-active-hover: color-mix(in srgb, var(--md-sys-color-primary) 16%, transparent);
+  --background-modifier-box-shadow: var(--md-sys-color-shadow);
+  --background-modifier-cover: color-mix(in srgb, var(--md-sys-color-scrim) 40%, transparent);
+  --background-modifier-error: var(--md-sys-color-error-container);
+  --background-modifier-error-hover: color-mix(in srgb, var(--md-sys-color-error) 20%, transparent);
+  --background-modifier-success: var(--md-sys-color-tertiary-container);
+  --background-modifier-form-field: var(--md-sys-color-surface-container-lowest);
+  --text-normal: var(--md-sys-color-on-surface);
+  --text-muted: var(--md-sys-color-on-surface-variant);
+  --text-faint: var(--md-sys-color-outline);
+  --text-on-accent: var(--md-sys-color-on-primary);
+  --text-accent: var(--md-sys-color-primary);
+  --text-accent-hover: var(--md-sys-color-on-primary-container);
+  --text-error: var(--md-sys-color-error);
+  --text-success: var(--md-sys-color-tertiary);
+  --text-selection: color-mix(in srgb, var(--md-sys-color-primary) 25%, transparent);
+  --text-highlight-bg: color-mix(in srgb, var(--md-sys-color-tertiary) 25%, transparent);
+  --interactive-normal: var(--md-sys-color-surface-container);
+  --interactive-hover: var(--md-sys-color-surface-container-high);
+  --interactive-accent: var(--md-sys-color-primary);
+  --interactive-accent-hover: color-mix(in srgb, var(--md-sys-color-primary) 84%, var(--md-sys-color-on-primary));
+  --interactive-error: var(--md-sys-color-error);
+  --titlebar-background: var(--md-sys-color-surface-container-lowest);
+  --titlebar-background-focused: var(--md-sys-color-surface-container-low);
+  --tab-outline-color: var(--md-sys-color-outline-variant);
+  --tab-background-active: var(--md-sys-color-surface-container-high);
+  --divider-color: var(--md-sys-color-outline-variant);
+  --code-background: var(--md-sys-color-surface-container-low);
+  --code-normal: var(--md-sys-color-on-surface);
+  --menu-background: var(--md-sys-color-surface-container-lowest);
+  --menu-border-color: var(--md-sys-color-outline-variant);
+  --modal-background: var(--md-sys-color-surface-container-lowest);
+  --modal-border-color: var(--md-sys-color-outline-variant);
+  --tooltip-background: var(--md-sys-color-inverse-surface);
+  --tooltip-text-color: var(--md-sys-color-inverse-on-surface);
+  --checkbox-color: var(--md-sys-color-primary);
+  --checkbox-color-hover: var(--md-sys-color-on-primary-container);
+  --checkbox-border-color: var(--md-sys-color-outline);
+  --checkbox-border-color-hover: var(--md-sys-color-on-surface-variant);
+  --scrollbar-bg: transparent;
+  --scrollbar-thumb-bg: color-mix(in srgb, var(--md-sys-color-outline-variant) 55%, transparent);
+  --scrollbar-active-thumb-bg: var(--md-sys-color-outline);
+  --status-bar-background: var(--md-sys-color-surface-container-low);
+  --status-bar-text-color: var(--md-sys-color-on-surface-variant);
+  --ribbon-background: var(--md-sys-color-surface-container-low);
+  --nav-item-background-active: var(--md-sys-color-surface-container-high);
+  --nav-item-color-active: var(--md-sys-color-on-surface);
+  --icon-color: var(--md-sys-color-on-surface-variant);
+  --link-color: var(--md-sys-color-primary);
+  --link-color-hover: var(--md-sys-color-on-primary-container);
+  --link-unresolved-color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ------------------------------------------------------------------ */
+/* Components                                                          */
+/* ------------------------------------------------------------------ */
+
+body {
+  accent-color: var(--md-sys-color-primary);
+  color: var(--text-normal);
+  background-color: var(--background-primary);
+}
+
+/* Buttons */
+button.mod-cta {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+button.mod-cta:hover {
+  background-color: var(--interactive-accent-hover);
+}
+
+/* Checkboxes and task items */
+input[type='checkbox']:checked {
+  background-color: var(--checkbox-color);
+  border-color: var(--checkbox-color);
+}
+input[type='checkbox']:hover {
+  border-color: var(--checkbox-border-color-hover);
+}
+
+/* Sliders and progress */
+input[type='range'],
+progress {
+  accent-color: var(--interactive-accent);
+}
+
+/* Blockquotes */
+.markdown-rendered blockquote {
+  border-color: var(--md-sys-color-primary);
+}
+
+/* Tables */
+.table-view-table > thead > tr > th,
+.markdown-rendered thead {
+  background-color: var(--md-sys-color-surface-container);
+  border-color: var(--md-sys-color-outline-variant);
+}
+.table-view-table > tbody > tr:hover,
+.markdown-rendered tbody tr:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+/* Embedded notes */
+.internal-embed .markdown-embed {
+  border-color: var(--background-modifier-border);
+  background-color: var(--background-primary-alt);
+}
+
+/* Workspace drop targets */
+.workspace-drop-target {
+  background-color: var(--background-modifier-active-hover);
+}
+
+/* Mod prompt (quick switcher) */
+.prompt {
+  background-color: var(--background-secondary);
+  border-color: var(--background-modifier-border);
+}
+.prompt-input {
+  background-color: var(--background-modifier-form-field);
+}

@@ -4,6 +4,7 @@ mod flake;
 mod hook;
 mod host;
 mod location;
+mod obsidian;
 mod sync;
 mod targets;
 
@@ -18,7 +19,7 @@ const USAGE: &str = "\
 Usage: lumina <command> [options]
 
 Commands:
-  sync    Sync settings and the flake.lock of the local Alice copy
+  sync    Sync settings into the local Alice copy and managed app targets
   hook    Run a Git hook action
 
 Options:

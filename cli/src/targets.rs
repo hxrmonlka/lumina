@@ -16,6 +16,7 @@ pub enum Source {
         args: &'static [&'static str],
         hint: &'static str,
     },
+    Obsidian,
 }
 
 pub struct Target {
@@ -26,6 +27,8 @@ pub struct Target {
     pub json: bool,
     pub precommit: bool,
 }
+
+pub const OBSIDIAN_ATOM: &str = "app/obsidian-matugen";
 
 pub const TARGETS: &[Target] = &[
     Target {
@@ -68,6 +71,15 @@ pub const TARGETS: &[Target] = &[
         json: false,
         precommit: true,
     },
+    Target {
+        atom: OBSIDIAN_ATOM,
+        hosts: &["ekpyrosis"],
+        source: Source::Obsidian,
+        // The destination is a vault passed with --vault, not Alice.
+        dest: "",
+        json: false,
+        precommit: false,
+    },
 ];
 
 pub fn find(atom: &str) -> Option<&'static Target> {
@@ -99,6 +111,12 @@ impl Target {
                 args,
                 hint,
             } => dump(program, args, hint)?,
+            Source::Obsidian => {
+                return runtime(format!(
+                    "'{}' is handled by its own module and never runs here.",
+                    self.atom
+                ))
+            }
         };
 
         if self.json && serde_json::from_str::<Value>(&content).is_err() {
