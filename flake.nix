@@ -22,6 +22,11 @@
       url = "github:hxrmonlka/resources/fastfetch";
       flake = false;
     };
+
+    shoji = {
+      url = "github:hxrmonlka/shoji/eup";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
