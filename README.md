@@ -42,9 +42,9 @@ Alice lives at [hxrmonlka/alice](https://github.com/hxrmonlka/alice) (branch `te
 Targets use a `category/name` format, like Gentoo!
 ```sh
 lumina sync settings/dms
-lumina sync settings/dms-kdl
 lumina sync settings/noctalia
-lumina sync settings/noctalia-kdl
+lumina sync self/rev
+lumina sync app/obsidian-matugen
 ```
 Some targets work only on specific hosts. On any other host, the command stops with an error since... you know, like I said.
 
