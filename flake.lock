@@ -154,11 +154,11 @@
     "shoji": {
       "flake": false,
       "locked": {
-        "lastModified": 1795086148,
-        "narHash": "sha256-REDJkTPUUj5I4SpnuQFbEcdIesBFvEdHMP3iAFV6BOg=",
+        "lastModified": 1795088327,
+        "narHash": "sha256-0txpwqQw4F0pUfb7r84BjkEY+Q4jVRbPSN0vfE6a2IA=",
         "owner": "hxrmonlka",
         "repo": "shoji",
-        "rev": "fae50cdc074a0612d597988a15efd8fd8c119da7",
+        "rev": "c4d3fc7ac505347ed336736ccbf631b9efab39cd",
         "type": "github"
       },
       "original": {
