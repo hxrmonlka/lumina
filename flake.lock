@@ -147,7 +147,25 @@
         "grub-theme": "grub-theme",
         "import-tree": "import-tree",
         "nixpkgs": "nixpkgs",
+        "shoji": "shoji",
         "wrapper-modules": "wrapper-modules"
+      }
+    },
+    "shoji": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795086148,
+        "narHash": "sha256-REDJkTPUUj5I4SpnuQFbEcdIesBFvEdHMP3iAFV6BOg=",
+        "owner": "hxrmonlka",
+        "repo": "shoji",
+        "rev": "fae50cdc074a0612d597988a15efd8fd8c119da7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hxrmonlka",
+        "ref": "eup",
+        "repo": "shoji",
+        "type": "github"
       }
     },
     "systems": {
