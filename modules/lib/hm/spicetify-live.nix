@@ -9,12 +9,15 @@
     system = pkgs.stdenv.hostPlatform.system;
     liveApply = self.packages.${system}.spicetify-live-apply;
     fallbackColors = pkgs.writeText "lumina-spicetify-fallback-colors.json" (builtins.toJSON cfg.colors.fallback);
-    extensionArgs = lib.concatMapStringsSep "\n" (extension: ''
-      args+=(--extension ${lib.escapeShellArg (toString extension.src)} ${lib.escapeShellArg extension.name})
-    '') cfg.extensions;
+    extensionArgs =
+      lib.concatMapStringsSep "\n" (extension: ''
+        args+=(--extension ${lib.escapeShellArg (toString extension.src)} ${lib.escapeShellArg extension.name})
+      '')
+      cfg.extensions;
     patchArgs = lib.concatStringsSep "\n" (lib.mapAttrsToList (key: value: ''
-      args+=(--patch ${lib.escapeShellArg key} ${lib.escapeShellArg value})
-    '') cfg.theme.patches);
+        args+=(--patch ${lib.escapeShellArg key} ${lib.escapeShellArg value})
+      '')
+      cfg.theme.patches);
     applyCommand = pkgs.writeShellApplication {
       name = "lumina-spicetify-apply";
       runtimeInputs = [liveApply];

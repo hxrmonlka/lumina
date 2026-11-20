@@ -71,20 +71,21 @@
           exec -- /system/bin/sh -c "echo ':arm64_dyn:M::\\x7f\\x45\\x4c\\x46\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x03\\x00\\xb7::/system/bin/houdini64:P' >> /proc/sys/fs/binfmt_misc/register"
     '';
 
-    houdini = pkgs.runCommand "libhoudini-android13" {
-      nativeBuildInputs = [pkgs.unzip];
-      src = pkgs.fetchurl {
-        url = "https://github.com/supremegamers/vendor_intel_proprietary_houdini/archive/${houdiniRev}.zip";
-        hash = "sha256-LoLNyI3cTUGPf7hhruu3xJyDqRuX9X2hBRC14RRqTtU=";
-      };
-    } ''
-      unzip -q $src
-      mkdir -p $out
-      cp -r --no-preserve=ownership vendor_intel_proprietary_houdini-${houdiniRev}/prebuilts/. $out/
-      chmod -R u+w $out
-      mkdir -p $out/etc/init
-      cp ${houdiniRc} $out/etc/init/houdini.rc
-    '';
+    houdini =
+      pkgs.runCommand "libhoudini-android13" {
+        nativeBuildInputs = [pkgs.unzip];
+        src = pkgs.fetchurl {
+          url = "https://github.com/supremegamers/vendor_intel_proprietary_houdini/archive/${houdiniRev}.zip";
+          hash = "sha256-LoLNyI3cTUGPf7hhruu3xJyDqRuX9X2hBRC14RRqTtU=";
+        };
+      } ''
+        unzip -q $src
+        mkdir -p $out
+        cp -r --no-preserve=ownership vendor_intel_proprietary_houdini-${houdiniRev}/prebuilts/. $out/
+        chmod -R u+w $out
+        mkdir -p $out/etc/init
+        cp ${houdiniRc} $out/etc/init/houdini.rc
+      '';
 
     houdiniProps = {
       "ro.product.cpu.abilist" = "x86_64,x86,arm64-v8a,armeabi-v7a,armeabi";
