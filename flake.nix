@@ -27,6 +27,11 @@
       url = "github:hxrmonlka/shoji/eup";
       flake = false;
     };
+
+    m3shapes = {
+      url = "github:soramanew/m3shapes/8a6fe8961749887d677700b6508e0c9249968b7e";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);

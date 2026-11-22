@@ -1,12 +1,22 @@
 {inputs, ...}: {
-  perSystem = {pkgs, ...}: {
+  perSystem = {pkgs, ...}: let
+    system = pkgs.stdenv.hostPlatform.system;
+    m3shapes = inputs.m3shapes.packages.${system}.m3shapes;
+    qmlImportPath = "${m3shapes}/${pkgs.qt6.qtbase.qtQmlPrefix}";
+  in {
+    packages.m3shapes = m3shapes;
+
     packages.shoji-cli = pkgs.stdenv.mkDerivation {
       pname = "shoji-cli";
       version = "unstable";
       src = "${inputs.shoji}/cli";
-      nativeBuildInputs = [pkgs.gnumake];
+      nativeBuildInputs = [pkgs.gnumake pkgs.makeWrapper];
       buildPhase = "make";
       installPhase = "make install PREFIX=$out";
+      postInstall = ''
+        wrapProgram "$out/bin/shoji" \
+          --prefix QML_IMPORT_PATH : "${qmlImportPath}"
+      '';
       meta = {
         description = "Command-line interface for the Shoji Quickshell desktop environment";
         mainProgram = "shoji";
