@@ -12,7 +12,12 @@
       src = "${inputs.shoji}/cli";
       nativeBuildInputs = [pkgs.gnumake pkgs.makeWrapper];
       buildPhase = "make";
-      installPhase = "make install PREFIX=$out";
+      # installPhase = "make install PREFIX=$out";
+      installPhase = ''
+        runHook preInstall
+        make install PREFIX=$out
+        runHook postInstall
+      '';
       postInstall = ''
         wrapProgram "$out/bin/shoji" \
           --prefix QML_IMPORT_PATH : "${qmlImportPath}"
