@@ -5,10 +5,8 @@ use std::process::Command;
 use crate::error::{runtime, Result};
 use crate::location::DOTFILES_VAR;
 
-const FLAKE_INPUT: &str = "lumina";
-
-pub fn update_lock(dir: &Path) -> Result<()> {
-    eprintln!("lumina: updating '{FLAKE_INPUT}' in {}", dir.display());
+pub fn update_lock(dir: &Path, input: &str) -> Result<()> {
+    eprintln!("lumina: updating '{input}' in {}", dir.display());
 
     let status = Command::new("nix")
         .args([
@@ -16,7 +14,7 @@ pub fn update_lock(dir: &Path) -> Result<()> {
             "nix-command flakes",
             "flake",
             "update",
-            FLAKE_INPUT,
+            input,
             "--flake",
         ])
         .arg(dir)

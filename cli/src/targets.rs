@@ -30,6 +30,22 @@ pub struct Target {
 
 pub const OBSIDIAN_ATOM: &str = "app/obsidian-matugen";
 
+pub struct RevTarget {
+    pub atom: &'static str,
+    pub input: &'static str,
+}
+
+pub const REV_TARGETS: &[RevTarget] = &[
+    RevTarget {
+        atom: "self/rev",
+        input: "lumina",
+    },
+    RevTarget {
+        atom: "shoji/rev",
+        input: "shoji",
+    },
+];
+
 pub const TARGETS: &[Target] = &[
     Target {
         atom: "settings/dms",
@@ -84,6 +100,10 @@ pub const TARGETS: &[Target] = &[
 
 pub fn find(atom: &str) -> Option<&'static Target> {
     TARGETS.iter().find(|target| target.atom == atom)
+}
+
+pub fn find_rev(atom: &str) -> Option<&'static RevTarget> {
+    REV_TARGETS.iter().find(|rev| rev.atom == atom)
 }
 
 impl Target {

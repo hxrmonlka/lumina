@@ -1,13 +1,11 @@
 use std::process::ExitCode;
 
 use crate::error::{usage, Result};
-use crate::targets::{self, Source, Target, TARGETS};
+use crate::targets::{self, Source, Target, REV_TARGETS, TARGETS};
 use crate::{flake, host, location, obsidian};
 
-const REV_ATOM: &str = "self/rev";
-
 enum Step {
-    Rev,
+    Rev(&'static str),
     File(&'static Target),
     Obsidian,
 }
@@ -17,7 +15,9 @@ Usage: lumina sync [--loc <path>] [--vault <path>...] <category/name>...
        lumina sync --list
 
 Sync each target into the local Alice copy.
-The target self/rev updates the lumina input in the flake.lock of the local Alice copy.
+The rev targets update one input in the flake.lock of the local Alice copy:
+  self/rev         lumina
+  shoji/rev        shoji
 You can run this command from any directory.
 
 Options:
@@ -105,8 +105,8 @@ fn execute(invocation: &Invocation, host: &str) -> Result<ExitCode> {
     let mut steps = Vec::new();
 
     for atom in &invocation.atoms {
-        if *atom == REV_ATOM {
-            steps.push(Step::Rev);
+        if let Some(rev) = targets::find_rev(atom) {
+            steps.push(Step::Rev(rev.input));
             continue;
         }
 
@@ -135,7 +135,7 @@ fn execute(invocation: &Invocation, host: &str) -> Result<ExitCode> {
     // vault. The Alice root is only resolved when a step actually needs it.
     let needs_root = steps
         .iter()
-        .any(|step| matches!(step, Step::Rev | Step::File(_)));
+        .any(|step| matches!(step, Step::Rev(_) | Step::File(_)));
     let root = match needs_root {
         true => Some(location::resolve(invocation.loc.clone())?),
         false => None,
@@ -143,7 +143,7 @@ fn execute(invocation: &Invocation, host: &str) -> Result<ExitCode> {
 
     for step in steps {
         match step {
-            Step::Rev => flake::update_lock(root.as_deref().unwrap())?,
+            Step::Rev(input) => flake::update_lock(root.as_deref().unwrap(), input)?,
             Step::File(target) => {
                 target.run(root.as_deref().unwrap())?;
             }
@@ -160,11 +160,13 @@ fn print_list() {
     let width = TARGETS
         .iter()
         .map(|target| target.atom.len())
-        .chain([REV_ATOM.len()])
+        .chain(REV_TARGETS.iter().map(|rev| rev.atom.len()))
         .max()
         .unwrap_or(0);
 
-    println!("{REV_ATOM:<width$}  all");
+    for rev in REV_TARGETS {
+        println!("{:<width$}  all", rev.atom);
+    }
 
     for target in TARGETS {
         println!("{:<width$}  {}", target.atom, target.hosts.join(", "));
@@ -249,6 +251,34 @@ mod tests {
         let invocation = invocation(&["bogus/name"], Vec::new());
         let error = execute(&invocation, "ekpyrosis").unwrap_err();
         assert!(error.to_string().contains("unknown target 'bogus/name'"));
+    }
+
+    #[test]
+    fn rev_atoms_resolve_to_their_input() {
+        assert_eq!(targets::find_rev("self/rev").unwrap().input, "lumina");
+        assert_eq!(targets::find_rev("shoji/rev").unwrap().input, "shoji");
+        assert!(targets::find_rev("shoji").is_none());
+    }
+
+    #[test]
+    fn rejects_vault_with_shoji_rev() {
+        let invocation = invocation(&["shoji/rev"], vec!["/tmp/whatever".to_string()]);
+        let error = execute(&invocation, "ekpyrosis").unwrap_err();
+        assert!(matches!(error, Failure::Usage(_)));
+        assert!(error.to_string().contains("--vault is only used with"));
+    }
+
+    #[test]
+    fn rev_atoms_run_on_every_host() {
+        let dir = temp_dir("rev-host");
+
+        for host in ["ekpyrosis", "tanuki", "unknown"] {
+            let mut invocation = invocation(&["shoji/rev"], Vec::new());
+            invocation.loc = Some(dir.display().to_string());
+            let error = execute(&invocation, host).unwrap_err();
+            assert!(matches!(error, Failure::Runtime(_)));
+            assert!(error.to_string().contains("has no flake.nix"));
+        }
     }
 
     #[test]

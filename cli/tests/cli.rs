@@ -75,12 +75,14 @@ fn sync_rejects_orphan_vault_flag() {
 
     // An existing target together with --vault must be rejected before any
     // filesystem work happens, on every host.
-    let output = run(&["sync", "self/rev", "--vault", "/tmp/whatever"]);
-    let stderr = stderr_of(&output);
-    assert!(
-        stderr.contains("--vault is only used with"),
-        "unexpected stderr: {stderr}"
-    );
+    for atom in ["self/rev", "shoji/rev"] {
+        let output = run(&["sync", atom, "--vault", "/tmp/whatever"]);
+        let stderr = stderr_of(&output);
+        assert!(
+            stderr.contains("--vault is only used with"),
+            "unexpected stderr for {atom}: {stderr}"
+        );
+    }
 }
 
 #[test]
@@ -89,8 +91,19 @@ fn sync_lists_all_targets() {
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("self/rev"));
+    assert!(stdout.contains("shoji/rev"));
     assert!(stdout.contains("app/obsidian-matugen"));
     assert!(stdout.contains("settings/dms"));
+}
+
+#[test]
+fn sync_help_documents_the_rev_targets() {
+    let output = run(&["sync", "--help"]);
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("self/rev"));
+    assert!(stdout.contains("shoji/rev"));
+    assert!(stdout.contains("ALICE_DOTFILES"));
 }
 
 #[test]
