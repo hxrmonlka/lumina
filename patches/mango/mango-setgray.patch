@@ -1,7 +1,48 @@
 diff --git a/include/mango/dispatch/bind.h b/include/mango/dispatch/bind.h
-index 46a4114..36629d0 100644
+index 9366193..7aa6b76 100644
 --- a/include/mango/dispatch/bind.h
 +++ b/include/mango/dispatch/bind.h
+@@ -7,26 +7,26 @@
+ 
+ /* The generic argument carried by a binding action. */
+ typedef struct Arg {
+-	int32_t i;
+-	int32_t i2;
+-	float f;
+-	float f2;
+-	char *v;
+-	char *v2;
+-	char *v3;
+-	uint32_t ui;
+-	uint32_t ui2;
+-	Client *tc;
++        int32_t i;
++        int32_t i2;
++        float f;
++        float f2;
++        char *v;
++        char *v2;
++        char *v3;
++        uint32_t ui;
++        uint32_t ui2;
++        Client *tc;
+ } Arg;
+ 
+ enum { PREV, NEXT };
+ enum { MON_PREV = -1, MON_NEXT = -2 };
+ enum { FORCE, UNFORCE };
+ enum {
+-	OVERCIRCLE_PREV = PREV,
+-	OVERCIRCLE_NEXT = NEXT,
+-	OVERCIRCLE_CURRENT_PREV,
+-	OVERCIRCLE_CURRENT_NEXT,
++        OVERCIRCLE_PREV = PREV,
++        OVERCIRCLE_NEXT = NEXT,
++        OVERCIRCLE_CURRENT_PREV,
++        OVERCIRCLE_CURRENT_NEXT,
+ };
+ 
+ int32_t minimize_window(const Arg *arg);
 @@ -39,6 +39,7 @@ int32_t group_leave(const Arg *arg);
  void client_group_join(Client *need_join, Client *need_replace);
  bool client_group_leave(Client *tc);
@@ -9,12 +50,12 @@ index 46a4114..36629d0 100644
 +int32_t set_gray(const Arg *arg);
  int32_t enter_overview(const Arg *arg);
  int32_t leave_overview(const Arg *arg);
- int32_t switcher(const Arg *arg);
+ void set_overview(const Arg *arg, bool enter, Monitor *m);
 diff --git a/src/config/binding_parse.c b/src/config/binding_parse.c
-index ed3c9be..802af0d 100644
+index 06732c4..d54928a 100644
 --- a/src/config/binding_parse.c
 +++ b/src/config/binding_parse.c
-@@ -563,6 +563,14 @@ FuncType parse_func_name(char *func_name, Arg *arg, char *arg_value,
+@@ -566,6 +566,14 @@ FuncType parse_func_name(char *func_name, Arg *arg, char *arg_value,
  		bool has_name = arg_value2 && arg_value2[0] != '\0' &&
  						!(strlen(arg_value2) == 1 && arg_value2[0] == '0');
  		(*arg).v = has_name ? strdup(arg_value2) : NULL;
@@ -30,7 +71,7 @@ index ed3c9be..802af0d 100644
  		func = toggle_overview;
  		(*arg).i = atoi(arg_value) == 1;
 diff --git a/src/dispatch/bind.c b/src/dispatch/bind.c
-index a64df77..35f6e0e 100644
+index fd6ea9d..a540a7c 100644
 --- a/src/dispatch/bind.c
 +++ b/src/dispatch/bind.c
 @@ -1,4 +1,5 @@
@@ -39,7 +80,7 @@ index a64df77..35f6e0e 100644
  #include "mango/animation/client.h"
  #include "mango/common/log.h"
  #include "mango/common/server.h"
-@@ -1680,6 +1681,14 @@ int32_t toggle_named_scratchpad(const Arg *arg) {
+@@ -1670,6 +1671,14 @@ int32_t toggle_named_scratchpad(const Arg *arg) {
  	return 0;
  }
  
