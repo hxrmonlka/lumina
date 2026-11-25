@@ -75,6 +75,7 @@
       };
 
       nativeBuildInputs = with pkgs; [
+        gawk
         bison
         ccWrapperBypass
         cmake
@@ -89,6 +90,7 @@
       buildInputs =
         wrappedLibs
         ++ [
+          pkgs.libxml2
           pkgs.libbsd
           pkgs.openssl
           pkgs.fuse3.dev
@@ -101,6 +103,8 @@
       cmakeBuildType = " ";
 
       postPatch = ''
+        chmod +x src/external/bootstrap_cmds/migcom.tproj/mig.sh
+
         patchShebangs \
           src/external/bootstrap_cmds/migcom.tproj/mig.sh \
           src/external/darlingserver/scripts \
