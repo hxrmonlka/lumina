@@ -32,31 +32,32 @@
       pulseaudio
     ];
 
-    ccWrapperBypass = pkgs.runCommandWith {
-      inherit stdenv;
-      name = "darling-cc-wrapper-bypass";
-      runLocal = false;
-      derivationArgs = {
-        template = pkgs.writeShellScript "darling-cc-wrapper-template" ''
-          for ((i = 1; i <= $#; i++)); do
-            j=$((i + 1))
-            if [[ "''${!i}" == "-target" && "''${!j}" == *"darwin"* ]]; then
-              exec @unwrapped@ "$@" $NIX_CFLAGS_COMPILE
-            fi
-          done
-          exec @wrapped@ "$@"
-        '';
-      };
-    } ''
-      mkdir -p "$out/bin"
+    ccWrapperBypass =
+      pkgs.runCommandWith {
+        inherit stdenv;
+        name = "darling-cc-wrapper-bypass";
+        runLocal = false;
+        derivationArgs = {
+          template = pkgs.writeShellScript "darling-cc-wrapper-template" ''
+            for ((i = 1; i <= $#; i++)); do
+              j=$((i + 1))
+              if [[ "''${!i}" == "-target" && "''${!j}" == *"darwin"* ]]; then
+                exec @unwrapped@ "$@" $NIX_CFLAGS_COMPILE
+              fi
+            done
+            exec @wrapped@ "$@"
+          '';
+        };
+      } ''
+        mkdir -p "$out/bin"
 
-      unwrapped="${stdenv.cc.cc}/bin/$CC" wrapped="${stdenv.cc}/bin/$CC" \
-        substituteAll "$template" "$out/bin/$CC"
-      unwrapped="${stdenv.cc.cc}/bin/$CXX" wrapped="${stdenv.cc}/bin/$CXX" \
-        substituteAll "$template" "$out/bin/$CXX"
+        unwrapped="${stdenv.cc.cc}/bin/$CC" wrapped="${stdenv.cc}/bin/$CC" \
+          substituteAll "$template" "$out/bin/$CC"
+        unwrapped="${stdenv.cc.cc}/bin/$CXX" wrapped="${stdenv.cc}/bin/$CXX" \
+          substituteAll "$template" "$out/bin/$CXX"
 
-      chmod +x "$out/bin/$CC" "$out/bin/$CXX"
-    '';
+        chmod +x "$out/bin/$CC" "$out/bin/$CXX"
+      '';
   in {
     packages.darling = stdenv.mkDerivation {
       inherit pname version;
@@ -70,7 +71,7 @@
         preFetch = ''
           export GIT_CLONE_PROTECTION_ACTIVE=false
         '';
-        hash = lib.fakeHash;
+        hash = "sha256-xp6pMUGVkjpv+vWMl6n1BvO6h0qLMlDBK32EovisaX0=";
       };
 
       nativeBuildInputs = with pkgs; [
@@ -85,12 +86,14 @@
         patchelf
       ];
 
-      buildInputs = wrappedLibs ++ [
-        pkgs.libbsd
-        pkgs.openssl
-        pkgs.fuse3.dev
-        stdenv.cc.libc.linuxHeaders
-      ];
+      buildInputs =
+        wrappedLibs
+        ++ [
+          pkgs.libbsd
+          pkgs.openssl
+          pkgs.fuse3.dev
+          stdenv.cc.libc.linuxHeaders
+        ];
 
       dontFixCmake = true;
       dontPatchShebangs = true;
