@@ -2,7 +2,7 @@
   perSystem = {pkgs, ...}: {
     packages.spicetify-live-apply = pkgs.writeShellApplication {
       name = "spicetify-live-apply";
-      runtimeInputs = with pkgs; [spicetify-cli jq coreutils gnused gnugrep rsync crudini util-linux];
+      runtimeInputs = with pkgs; [spicetify-cli jq coreutils gnused gnugrep rsync crudini util-linux patchelf];
       text = ''
         usage() {
           echo "Usage: spicetify-live-apply --spotify <dir> --theme-src <dir> --theme-name <name> --colors <json> --live-dir <dir> [--extension <src> <name>]... [--patch <key> <value>]..." >&2
@@ -87,6 +87,17 @@
           first_run=1
         fi
 
+        ensure_spotify_runtime_rpath() {
+          local wrapped="$live_dir/.spotify-wrapped"
+          [ -x "$wrapped" ] || return 0
+
+          if ! patchelf --print-rpath "$wrapped" | tr ':' '\n' | grep -Fxq "\$ORIGIN"; then
+            patchelf --add-rpath "\$ORIGIN" "$wrapped"
+          fi
+        }
+
+        ensure_spotify_runtime_rpath
+
         desired_signature="$(
           {
             printf '%s\0' "$spotify_src" "$theme_src" "$theme_name" "$live_dir"
@@ -113,6 +124,7 @@
         if [ "$first_run" -eq 1 ]; then
           rsync -a --delete --chmod=Du+w,Fu+w "$spotify_src"/ "$live_dir"/
         fi
+        ensure_spotify_runtime_rpath
 
         [ -x "$live_dir/spotify" ] && [ -x "$live_dir/.spotify-wrapped" ] || {
           echo "spicetify-live-apply: Spotify launcher files are missing from $live_dir." >&2
